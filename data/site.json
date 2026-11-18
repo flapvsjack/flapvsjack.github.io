@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "channel": "flapvsjack",
+  "community": "OnionS Spoon Alliance",
+  "tagline": "Games, raids and good vibes with the Spooners. Live on Twitch and YouTube.",
+  "timezone": "America/Chicago",
+  "tzLabel": "CT",
+  "theme": { "a": "#1787b4", "b": "#ffffff" },
+  "starterContent": true,
+  "links": {
+    "discord": "",
+    "twitch": "https://twitch.tv/flapvsjack",
+    "youtube": "https://www.youtube.com/@flapvsjack",
+    "patreon": "https://www.patreon.com/cw/flapvsjack",
+    "kofi": "",
+    "merch": "",
+    "tiktok": "",
+    "instagram": "",
+    "x": ""
+  },
+  "watch": { "twitchChannel": "flapvsjack", "youtubeChannelId": "" },
+  "discord": { "guildId": "329044337981653013", "raidChannel": "spooners🥄comingsoon", "voiceChannel": "PTT🔴" },
+  "weekNote": "",
+  "schedule": [
+    { "id": "s1", "day": 1, "start": "19:00", "end": "22:00", "game": "Starter row: change in Cutroom", "platform": "Both", "format": "Landscape", "status": "confirmed", "notes": "" },
+    { "id": "s2", "day": 3, "start": "19:00", "end": "22:00", "game": "Starter row: change in Cutroom", "platform": "Both", "format": "Both", "status": "confirmed", "notes": "" },
+    { "id": "s3", "day": 5, "start": "20:00", "end": "20:30", "game": "Discord Raid", "platform": "Discord", "format": "Landscape", "status": "confirmed", "notes": "Boss Fight, Hive Lord, Horde and Knight in the PTT voice channel" }
+  ],
+  "games": [
+    { "id": "g1", "name": "Starter game: change in Cutroom", "status": "Now playing", "notes": "" }
+  ],
+  "patreon": {
+    "blurb": "Patrons keep the streams, raids and the Spooners game going. Every tier gets the Supporter role in the Discord.",
+    "tiers": [
+      { "name": "Spoon", "price": "", "perks": "Supporter role in Discord, your name in the stream credits" },
+      { "name": "Big Spoon", "price": "", "perks": "Everything in Spoon, plus early Spooners skins and a say in the game lineup" }
+    ]
+  },
+  "goal": { "show": true, "label": "Follower goal", "current": 0, "target": 100, "reward": "24-hour stream" },
+  "shoutout": { "show": true, "title": "Spooner of the week", "name": "", "reason": "", "extra": [] },
+  "vote": {
+    "show": true,
+    "question": "What should we play next?",
+    "how": "Vote in the Discord poll or type !vote in chat.",
+    "options": [ { "name": "Suggestion 1", "votes": 0 }, { "name": "Suggestion 2", "votes": 0 } ]
+  },
+  "clips": [],
+  "raids": {
+    "when": "Saturdays · 8:00 PM CT",
+    "how": "Join the PTT voice channel in the Discord, then type in the raid chat to spawn your Spooner. Use !shoot, !slash, !grenade and !stim to fight. Everyone who helps gets XP.",
+    "modes": [
+      { "name": "Boss Fight", "image": "assets/raid-card-chad.jpg", "text": "Three rotating bosses that level up. !attack, !shield, !heal." },
+      { "name": "Hive Lord", "image": "assets/raid-card-hive.jpg", "text": "A giant armoured worm tunnels under the sand. !shoot, !grenade, !stim." },
+      { "name": "Horde Mode", "image": "assets/lobby-bg-horde.webp", "text": "Robot waves grow every round. If everyone goes down, the horde wins." },
+      { "name": "Knight Fight", "image": "assets/raid-card-knight.jpg", "text": "Duel the knight with !slash, or call someone out with !duel @name." }
+    ]
+  },
+  "spooners": {
+    "status": "In development",
+    "blurb": "Your Spooner is the avatar you already use on stream. Soon it gets a home on the web: make it yours, gear it up and raid with the Alliance online.",
+    "features": [
+      { "name": "Character creator", "text": "Pick a skin, colour and hat. Your look follows you to stream, Discord raids and the hub." },
+      { "name": "Spoon shop", "text": "Spend the XP you earn chatting and raiding on skins, hats and moves." },
+      { "name": "Raids & Horde online", "text": "Fight bosses together from the website or right inside Discord." }
+    ]
+  },
+  "map": {
+    "mid": "12aIaHDnEeWEZpo5yFjRvAih6V88",
+    "scriptUrl": "",
+    "blurb": "Spooners are everywhere. Add yourself to the map: we only save your continent, country and state."
+  },
+  "support": [
+    { "name": "Patreon", "url": "https://www.patreon.com/cw/flapvsjack", "perk": "Supporter role, early Spooners skins, behind-the-scenes posts" },
+    { "name": "Twitch sub", "url": "https://www.twitch.tv/subs/flapvsjack", "perk": "Sub emotes, no ads, sub badge and the Supporter perks in chat" },
+    { "name": "YouTube membership", "url": "https://www.youtube.com/@flapvsjack/join", "perk": "Member badge and emotes in YouTube chat" }
+  ]
+}

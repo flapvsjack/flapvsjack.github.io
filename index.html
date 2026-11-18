@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>flapvsjack · OnionS Spoon Alliance</title>
+<meta name="description" content="The Spooners hub, Discord raids and the stream schedule of flapvsjack. Live on Twitch and YouTube.">
+<meta property="og:title" content="flapvsjack · OnionS Spoon Alliance">
+<meta property="og:description" content="Spooners hub, Discord raids and the stream schedule.">
+<meta property="og:image" content="assets/raid-card-chad.jpg">
+<meta name="theme-color" content="#1787b4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">🥄</span><span id="brandName">flapvsjack</span></a>
+    <nav class="mainnav" aria-label="Sections">
+      <a href="#hub" data-open="hub">Spooners Hub</a>
+      <a href="#discord" data-open="discord">Discord</a>
+      <a href="#schedule" data-open="schedule">Schedule</a>
+      <a href="#watch">Watch</a>
+      <a href="#community">Community</a>
+      <a href="#map">Map</a>
+      <a href="#support">Support</a>
+    </nav>
+    <a class="btn btn-discord" id="topDiscord" href="#" target="_blank" rel="noopener">Join the Discord</a>
+  </div>
+</header>
+
+<main id="main">
+  <!-- THE THREE MAIN ATTRACTIONS: slanted panels; the one you pick opens, the lines slide -->
+  <section class="stage3" id="top" aria-label="Spooners Hub, Discord and Schedule">
+
+    <article class="p3 p3-hub" id="hub" data-key="hub">
+      <button class="p3-head" type="button" aria-expanded="false" aria-controls="hub-body">
+        <span class="p3-kick">01 · Play</span><span class="p3-title">Spooners <br>Hub</span>
+        <span class="p3-teaser" id="hubTeaser">Make your Spooner, shop and raid online.</span>
+        <span class="p3-cta">Open</span>
+      </button>
+      <div class="p3-body" id="hub-body">
+        <div class="p3-scroll">
+          <div class="hubgrid">
+            <div class="sp-copy">
+              <p class="kicker"><span class="pill" id="spStatus">In development</span></p>
+              <h2>Spooners Hub</h2>
+              <p class="lead" id="spBlurb"></p>
+              <ul class="features" id="spFeatures"></ul>
+            </div>
+            <div class="creator" aria-label="Character creator preview">
+              <span class="label">Character creator · preview</span>
+              <div class="stage" id="spStage"></div>
+              <div class="creator-ctl">
+                <div class="ctl"><span class="label">Colour</span><div class="swatches" id="spColors"></div></div>
+                <div class="ctl"><span class="label">Hat</span><div class="chips" id="spHats"></div></div>
+                <div class="ctl"><span class="label">Name</span><input id="spName" maxlength="16" placeholder="Your name" autocomplete="off"></div>
+              </div>
+              <p class="small">A taste of what's coming. Your Spooner already lives on stream: type <code>!color</code>, <code>!hat</code> or <code>!skin</code> in chat.</p>
+            </div>
+          </div>
+          <div class="shop">
+            <div class="shop-h"><h3>Spoon shop</h3><span class="pill pill-soft">Coming with the game</span></div>
+            <div class="shopgrid" id="shopGrid"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="p3 p3-discord" id="discord" data-key="discord">
+      <button class="p3-head" type="button" aria-expanded="false" aria-controls="discord-body">
+        <span class="p3-kick">02 · Hang out</span><span class="p3-title">Discord</span>
+        <span class="p3-teaser" id="dcTeaser">Raids, Horde Mode and the OnionS Spoon Alliance.</span>
+        <span class="p3-cta">Open</span>
+      </button>
+      <div class="p3-body" id="discord-body">
+        <div class="p3-scroll">
+          <div class="dc-top">
+            <div>
+              <p class="kicker light" id="dcServer">OnionS Spoon Alliance</p>
+              <h2>Discord</h2>
+              <p class="lead light" id="dcLead">Chat between streams, get pinged when we go live, and play the raid with your Spooner.</p>
+              <div class="row">
+                <a class="btn btn-white" id="dcJoin" href="#" target="_blank" rel="noopener">Join the Discord</a>
+                <a class="btn btn-outline-w" href="#map" id="dcMapLink">Pin yourself on the map</a>
+              </div>
+            </div>
+            <div class="dc-live" id="dcLive" hidden></div>
+          </div>
+          <div class="raid-h"><h3>Raids &amp; Horde Mode</h3><span class="raidwhen" id="raidWhen"></span></div>
+          <div class="raidgrid" id="raidModes"></div>
+          <p class="raidhow" id="raidHow"></p>
+        </div>
+      </div>
+    </article>
+
+    <article class="p3 p3-sched" id="schedule" data-key="schedule">
+      <button class="p3-head" type="button" aria-expanded="false" aria-controls="schedule-body">
+        <span class="p3-kick">03 · Tune in</span><span class="p3-title">Schedule</span>
+        <span class="p3-teaser" id="schedTeaser">Next stream</span>
+        <span class="p3-cta">Open</span>
+      </button>
+      <div class="p3-body" id="schedule-body">
+        <div class="p3-scroll">
+          <div class="sched-top">
+            <div class="nextcard" id="nextCard"></div>
+            <div class="sched-side">
+              <h2>Schedule</h2>
+              <div class="tabs" role="tablist" aria-label="Schedule views">
+                <button role="tab" id="stab-week" aria-selected="true" data-view="week">This week</button>
+                <button role="tab" id="stab-games" aria-selected="false" data-view="games">Game lineup</button>
+                <button role="tab" id="stab-patreon" aria-selected="false" data-view="patreon">Patreon</button>
+              </div>
+              <button class="btn btn-a" id="icsBtn" type="button">Add to my calendar</button>
+              <p class="small" id="tzNote"></p>
+            </div>
+          </div>
+          <p class="weeknote" id="weekNote" hidden></p>
+          <div id="view-week">
+            <div class="week" id="week"></div>
+            <div class="legend"><span><b class="lg ok"></b>Confirmed</span><span><b class="lg maybe"></b>Maybe</span><span><b class="lg off"></b>Cancelled</span></div>
+          </div>
+          <div id="view-games" hidden><div class="shelves" id="shelves"></div></div>
+          <div id="view-patreon" hidden><div id="patreonView"></div></div>
+        </div>
+      </div>
+    </article>
+
+    <div class="p3-hint" id="p3Hint" aria-hidden="true">Pick one to open it</div>
+  </section>
+
+  <!-- BELOW THE FOLD -->
+  <section class="band" id="watch">
+    <div class="in">
+      <div class="sec-h"><h2>Watch live</h2>
+        <div class="tabs" role="tablist" aria-label="Platform">
+          <button role="tab" id="tab-tw" aria-selected="true" data-player="twitch">Twitch</button>
+          <button role="tab" id="tab-yt" aria-selected="false" data-player="youtube">YouTube</button>
+        </div>
+      </div>
+      <div class="player" id="player"></div>
+      <div class="linkrow" id="heroLinks"></div>
+    </div>
+  </section>
+
+  <section class="band band-b" id="community">
+    <div class="in">
+      <div class="sec-h"><h2>Community</h2></div>
+      <div class="commgrid">
+        <div class="card" id="goalCard"></div>
+        <div class="card" id="shoutCard"></div>
+        <div class="card span2" id="voteCard"></div>
+      </div>
+      <div id="clipsWrap">
+        <h3 class="h3">Clips &amp; VODs</h3>
+        <div class="clips" id="clips"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="map">
+    <div class="in">
+      <div class="sec-h"><h2>Spooners around the world</h2></div>
+      <p class="lead" id="mapBlurb"></p>
+      <div class="mapgrid">
+        <div class="mapframe" id="mapFrame"></div>
+        <form class="card pinform" id="pinForm" novalidate>
+          <h3>Pin yourself</h3>
+          <button class="btn btn-ghost" type="button" id="pinLocate">Fill in from my location</button>
+          <label for="pinName">Discord or chat name <span class="opt">(optional)</span></label>
+          <input id="pinName" maxlength="40" autocomplete="nickname">
+          <label for="pinContinent">Continent</label>
+          <select id="pinContinent" required></select>
+          <label for="pinCountry">Country</label>
+          <input id="pinCountry" list="countryList" required autocomplete="country-name">
+          <datalist id="countryList"></datalist>
+          <label for="pinState">State, province or region</label>
+          <input id="pinState" autocomplete="address-level1">
+          <button class="btn btn-a" type="submit" id="pinSubmit">Add me to the map</button>
+          <p class="formmsg" id="pinMsg" role="status"></p>
+        </form>
+      </div>
+      <div class="tally" id="tally" hidden></div>
+    </div>
+  </section>
+
+  <section class="band band-a" id="support">
+    <div class="in">
+      <div class="sec-h"><h2>Support the stream</h2></div>
+      <div class="supportgrid" id="supportGrid"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="in foot-in">
+    <span id="footName">flapvsjack</span>
+    <div class="linkrow small-links" id="footLinks"></div>
+    <span class="small">Times in Central Time. Schedule can change; the Discord always has the latest.</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
