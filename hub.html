@@ -195,7 +195,7 @@ footer a { text-decoration:none; }
   // default menu (Cutroom › Webpage › Spooners Hub menu changes these)
   const DEFAULT_ENTRIES = [
     { key: "raids", name: "RAIDS", tag: "Live", kicker: "TEAM UP IN CHAT", desc: "Join the stream raid and fight the boss together with chat commands. Beat it and everyone gets 3 big chests of coins.", show: true },
-    { key: "horde", name: "HORDE", tag: "Soon", kicker: "SURVIVE THE WAVES", desc: "Hold the line against wave after wave. Coming after raids.", show: true },
+    { key: "horde", name: "HORDE", tag: "Live", kicker: "SURVIVE THE WAVES", desc: "Robot waves grow every round. Hold the line together: survive every third wave and everyone still standing gets a big chest of coins.", show: true },
     { key: "character", name: "CHARACTER", tag: "", kicker: "BUILD YOUR SPOONER", desc: "Pick what your Spooner wears and colour it. Save, and your stream avatar wears it too.", show: true },
     { key: "shop", name: "SHOP", tag: "Coins", kicker: "SPEND YOUR COINS", desc: "Buy colours, add-ons and companions. Each cosmetic levels up to 10 as you chat, battle and use emotes, and every level raises your Aura.", show: true },
     { key: "loot", name: "LOOT", tag: "", kicker: "RAID REWARDS", desc: "Every boss you help beat drops 3 big chests of coins. Sign in to collect them.", show: true },
@@ -236,6 +236,9 @@ footer a { text-decoration:none; }
       const r = SITE.raids || {};
       body = fact("When", esc(r.when || "Weekends on Discord")) + (r.modes || []).slice(0, 4).map(m => fact("Mode", esc(m.name))).join("") + fact("Victory reward", "3 big chests each");
       body = `<div class="facts">${body}</div>` + ctaLink("JOIN THE RAID", (SITE.links || {}).discord);
+    } else if (e.key === "horde") {
+      const r = SITE.raids || {}, hm = (r.modes || []).find(m => /horde/i.test(m.name || ""));
+      body = `<div class="facts">${fact("When", esc(r.when || "Weekends on Discord"))}${fact("Waves", "Bigger every round")}${fact("Commands", "!shoot · !slash · !grenade")}${fact("Survive a wave", "+2 points")}${fact("Every 3rd wave", "1 big chest each")}${hm && hm.text ? fact("Lose", "Everyone down = back to wave 1") : ""}</div>` + ctaLink("JOIN THE RAID", (SITE.links || {}).discord);
     } else if (e.key === "shop") body = shopHtml();
     else if (e.key === "loot") body = lootHtml();
     else if (e.key === "link") body = linkHtml();
