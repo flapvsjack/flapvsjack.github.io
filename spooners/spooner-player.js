@@ -149,13 +149,99 @@
       this.pose = poseAt(this.def, this.clip, this.t);
       applyFx(this.def, this.pose, this.age);
       stepSprings(this, dt);
+      fxStep(this, dt);
     }
     draw(ctx, x, y, scale, flip, opts) {
       if (!this.pose) this.pose = poseAt(this.def, this.clip, this.t);
       this.lastXY = [x, y, scale || 1, flip];
-      return drawPose(ctx, this.def, this.pose, this.images, this.parts, x, y, scale || 1, flip, this.spring, opts);
+      fxDraw(this, ctx, x, y, scale || 1, flip, true);
+      const W = drawPose(ctx, this.def, this.pose, this.images, this.parts, x, y, scale || 1, flip, this.spring, opts);
+      fxDraw(this, ctx, x, y, scale || 1, flip, false);
+      return W;
+    }
+    /** a one-shot burst of an effect (hit sparks, shockwave...) at a layer, e.g. puppet.burst("hit-burst") */
+    burst(ref, layer, x, y, count) {
+      const d = fxOf(ref); if (!d) return false;
+      if (!this.pose) this.pose = poseAt(this.def, this.clip, this.t);
+      const fx = this.fxs || (this.fxs = { ps: [], acc: [] }), at = fxAnchor(world(this.def, this.pose, this.spring), this.def, { layer, x, y }); if (!at) return false;
+      fxSpawn(fx, d, at[0], at[1], at[2], count || d.burst || 24); return true;
     }
   }
+  /* ---------------- effects: particles that follow a layer (sparkles, fire, frost, hearts, shockwaves...)
+     An effect is plain data: {id, name, shape, colors, blend, rate, burst, life:[a,b], speed:[a,b], angle, spread, gravity, drag,
+     size:[start,end], alpha:[start,end], radius, spin, behind}. Characters list them in def.effects = [{fx: id or effect, layer, x, y}];
+     shop items with an "fx" add one where they attach. Workflow › ⑦ Effects makes them; the export ships them as data.effects. */
+  const FXLIB = {};
+  function registerEffects(list) { for (const e of list || []) if (e && e.id) FXLIB[e.id] = e; }
+  const fxOf = ref => (ref && typeof ref === "object" ? ref : FXLIB[ref]) || null;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pair = (v, d) => Array.isArray(v) ? [+v[0] || 0, +(v[1] ?? v[0]) || 0] : [v ?? d, v ?? d];
+  const SPRITES = new Map();
+  function sprite(shape, color) {                                    // one small picture per shape and colour, drawn scaled
+    const key = shape + "|" + color; let c = SPRITES.get(key); if (c) return c;
+    if (typeof document === "undefined") return null;
+    c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"), m = 32;
+    x.fillStyle = x.strokeStyle = color;
+    if (shape === "dot" || shape === "smoke") { const g = x.createRadialGradient(m, m, 0, m, m, m); g.addColorStop(0, color); g.addColorStop(shape === "smoke" ? .2 : .35, color); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.globalAlpha = shape === "smoke" ? .55 : 1; x.fillRect(0, 0, 64, 64); }
+    else if (shape === "star") { x.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 12 : 30, a = -Math.PI / 2 + i * Math.PI / 5; x.lineTo(m + Math.cos(a) * r, m + Math.sin(a) * r); } x.closePath(); x.shadowColor = color; x.shadowBlur = 8; x.fill(); }
+    else if (shape === "spark") { x.beginPath(); x.moveTo(2, m); x.lineTo(m, m - 6); x.lineTo(62, m); x.lineTo(m, m + 6); x.closePath(); x.shadowColor = color; x.shadowBlur = 6; x.fill(); }
+    else if (shape === "ring") { x.lineWidth = 5; x.beginPath(); x.arc(m, m, 27, 0, Math.PI * 2); x.shadowColor = color; x.shadowBlur = 6; x.stroke(); }
+    else if (shape === "heart") { x.beginPath(); x.moveTo(m, 54); x.bezierCurveTo(4, 34, 10, 6, m, 20); x.bezierCurveTo(54, 6, 60, 34, m, 54); x.fill(); }
+    else if (shape === "square") { x.fillRect(16, 22, 32, 20); }
+    else if (shape === "note") { x.font = "bold 48px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("♪", m, m + 2); }
+    else if (shape === "bubble") { x.lineWidth = 3; x.beginPath(); x.arc(m, m, 26, 0, Math.PI * 2); x.globalAlpha = .9; x.stroke(); x.globalAlpha = .35; x.fill(); x.globalAlpha = 1; x.fillStyle = "#fff"; x.beginPath(); x.arc(m - 9, m - 9, 5, 0, Math.PI * 2); x.fill(); }
+    else if (shape === "flame") { const g = x.createRadialGradient(m, m + 8, 2, m, m, 30); g.addColorStop(0, "#fff7c0"); g.addColorStop(.35, color); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.beginPath(); x.moveTo(m, 2); x.bezierCurveTo(58, 30, 54, 62, m, 62); x.bezierCurveTo(10, 62, 6, 30, m, 2); x.fill(); }
+    else { x.beginPath(); x.arc(m, m, 26, 0, Math.PI * 2); x.fill(); }
+    if (SPRITES.size > 200) SPRITES.clear(); SPRITES.set(key, c); return c;
+  }
+  const FX_CAP = 160;
+  function fxSpawn(fx, d, px, py, k, n) {
+    const life = pair(d.life, 1), speed = pair(d.speed, 60), size = pair(d.size, 14), cols = (d.colors && d.colors.length ? d.colors : ["#ffffff"]);
+    const ang = (d.angle ?? -90) * Math.PI / 180, spr = (d.spread ?? 360) * Math.PI / 180, rad = (d.radius || 0) * k;
+    for (let i = 0; i < n && fx.ps.length < FX_CAP; i++) {
+      const a = ang + (Math.random() - .5) * spr, s = rnd(speed[0], speed[1]) * k, ra = Math.random() * Math.PI * 2, rr = rad * Math.sqrt(Math.random());
+      fx.ps.push({ d, x: px + Math.cos(ra) * rr, y: py + Math.sin(ra) * rr * .7, vx: Math.cos(a) * s, vy: Math.sin(a) * s, age: 0, life: Math.max(.05, rnd(life[0], life[1])),
+        s0: size[0] * k, s1: size[1] * k, col: cols[Math.floor(Math.random() * cols.length)], rot: Math.random() * Math.PI * 2, vr: (d.spin || 0) * (Math.random() < .5 ? -1 : 1) * Math.PI * 2 });
+    }
+  }
+  function fxAnchor(W, def, e) {
+    const L = (e.layer && W[e.layer]) || W[(def.layers.find(l => !l.parent) || def.layers[0] || {}).id]; if (!L) return null;
+    const x = e.x || 0, y = e.y || 0;
+    return [L[0] * x + L[2] * y + L[4], L[1] * x + L[3] * y + L[5], Math.hypot(L[0], L[1]) || 1];
+  }
+  function fxStep(p, dt) {
+    const fx = p.fxs || (p.fxs = { ps: [], acc: [] }), list = p.def.effects || [];
+    if (list.length && p.pose) {
+      const W = world(p.def, p.pose, p.spring);
+      list.forEach((e, i) => {
+        const d = fxOf(e.fx); if (!d || !(d.rate > 0)) return;
+        const at = fxAnchor(W, p.def, e); if (!at) return;
+        fx.acc[i] = (fx.acc[i] || 0) + d.rate * dt;
+        const n = Math.floor(fx.acc[i]); if (n > 0) { fx.acc[i] -= n; fxSpawn(fx, d, at[0], at[1], (e.scale || 1) * at[2], Math.min(n, 20)); }
+      });
+    }
+    for (const q of fx.ps) {
+      q.age += dt; const dr = Math.max(0, 1 - (q.d.drag || 0) * dt);
+      q.vx *= dr; q.vy = q.vy * dr + (q.d.gravity || 0) * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.rot += q.vr * dt;
+    }
+    if (fx.ps.length) fx.ps = fx.ps.filter(q => q.age < q.life);
+  }
+  function fxDraw(p, ctx, x, y, scale, flip, behind) {
+    const fx = p.fxs; if (!fx || !fx.ps.length) return;
+    ctx.save(); ctx.translate(x, y); ctx.scale(flip ? -scale : scale, scale);
+    for (const q of fx.ps) {
+      if (!!q.d.behind !== behind) continue;
+      const t = q.age / q.life, al = pair(q.d.alpha, 1), a = al[0] + (al[1] - al[0]) * t, s = q.s0 + (q.s1 - q.s0) * t;
+      if (a <= 0 || s <= 0) continue;
+      const img = sprite(q.d.shape || "dot", q.col); if (!img) continue;
+      ctx.globalAlpha = Math.min(1, a); ctx.globalCompositeOperation = q.d.blend === "add" ? "lighter" : "source-over";
+      const rot = q.d.shape === "spark" ? Math.atan2(q.vy, q.vx) : (q.d.spin ? q.rot : 0);
+      if (rot) { ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(rot); ctx.drawImage(img, -s / 2, -s / 2, s, s); ctx.restore(); }
+      else ctx.drawImage(img, q.x - s / 2, q.y - s / 2, s, s);
+    }
+    ctx.restore();
+  }
+
 
   // item motion that loops on its own: pulse (grow/shrink + glow), spin, bob (float), orbit (circles around, passing behind)
   function applyFx(def, pose, age) {
@@ -196,9 +282,14 @@
     for (const L of def.layers) if (paint && paint[L.id]) L.part = recolor(images, L.part, paint[L.id]);   // body colour zones
     let n = 0;
     for (const eq of equipped || []) {
-      const it = byId[eq.item]; if (!it || !it.w) continue;
+      const it = byId[eq.item]; if (!it || (!it.w && !it.fx)) continue;
       const at = it.attach && it.attach !== "none" ? it.attach : "body";
       const a = anchors[at] || (root ? { layer: root.id, x: 0, y: 0 } : null); if (!a) continue;
+      if (it.fx) {                                                     // an effect item (sparkles, fire aura...): particles where it attaches
+        const fxd = fxOf(it.fx), col = eq.color && eq.color.color;
+        def.effects = (def.effects || []).concat([{ fx: col && fxd ? Object.assign({}, fxd, { colors: [col, "#ffffff"] }) : it.fx, layer: a.layer, x: a.x, y: a.y }]);
+        if (it.fxOnly || !it.w) continue;
+      }
       const io = it.offset || {}, eo = eq.offset || {}, m = it.motion || {};
       const o = { x: (io.x || 0) + (eo.x || 0), y: (io.y || 0) + (eo.y || 0), rot: (io.rot || 0) + (eo.rot || 0), z: (io.z || 0) + (eo.z || 0), scale: (io.scale || 1) * (eo.scale || 1) };
       const pv = it.pivot || defaultPivot(at, it.w, it.h);
@@ -267,9 +358,11 @@
   }
 
   root.SpoonerPlayer = {
-    version: 3, EASE, PROPS, STEP_PROPS, poseAt, world, drawPose, partsUsed, Puppet, dress, tint, recolor, applyFx, ATTACH_Z, ATTACH_SIZE,
+    version: 4, EASE, PROPS, STEP_PROPS, poseAt, world, drawPose, partsUsed, Puppet, dress, tint, recolor, applyFx, ATTACH_Z, ATTACH_SIZE,
     /** load a character from an export (window.SPOONERS_DATA) */
+    registerEffects, effects: FXLIB,
     async load(data, id, base) {
+      registerEffects(data.effects);
       const def = data.characters[id]; if (!def) throw new Error("No character " + id);
       const images = await loadImages(data, partsUsed(def), base);
       return new Puppet(def, images, data.parts);
@@ -278,6 +371,7 @@
     async loadOutfit(data, outfit, base) {
       const o = typeof outfit === "string" ? (data.outfits || []).find(x => x.id === outfit) : outfit;
       if (!o) throw new Error("No outfit " + outfit);
+      registerEffects(data.effects);
       const b = data.characters[o.base]; if (!b) throw new Error("No base Spooner " + o.base);
       const ids = new Set(partsUsed(b)); for (const e of o.equipped || []) ids.add(e.item);
       const images = await loadImages(data, [...ids], base);
