@@ -53,6 +53,7 @@ nav.menu { display:flex; flex-direction:column; gap:12px; }
 .hero .glow { position:absolute; top:30px; width:min(360px, 80vw); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(127,233,255,.55) 0%, rgba(55,184,255,.18) 45%, transparent 70%); }
 .hero .ring { position:absolute; top:64px; width:min(290px, 64vw); aspect-ratio:1; border-radius:50%; border:3px dashed rgba(255,255,255,.35); animation:spin 40s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.hero canvas.spc { position:relative; width:min(250px, 56vw); height:auto; aspect-ratio:500 / 560; cursor:pointer; }
 .hero svg.sp { position:relative; width:min(250px, 56vw); height:auto; animation:bob 3.2s ease-in-out infinite; }
 @keyframes bob { 50% { transform:translateY(-8px); } }
 .plate { position:relative; margin-top:-6px; transform:skewX(-12deg); background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:6px 6px 0 var(--bright); padding:8px 28px; text-align:center; }
@@ -75,15 +76,24 @@ nav.menu { display:flex; flex-direction:column; gap:12px; }
 .fact .v { font-size:21px; font-weight:800; text-align:right; }
 .cta { all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; margin:24px 0 0 auto; min-width:240px; height:62px; padding:0 22px; transform:skewX(-12deg); background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:6px 6px 0 var(--bright); text-decoration:none; transition:transform .12s ease; }
 .cta > * { transform:skewX(12deg); }
-.cta .comic { font-size:32px; letter-spacing:2px; }
+.cta .comic { font-size:32px; letter-spacing:2px; white-space:nowrap; }
 .cta:hover { transform:skewX(-12deg) translateY(-2px); color:#0a1a4d; }
 .cta[disabled] { opacity:.5; cursor:default; }
 .list { margin-top:16px; display:flex; flex-direction:column; gap:10px; max-height:46vh; overflow:auto; padding-right:4px; }
 .item { display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; padding:10px 12px; background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.14); }
+.item { grid-template-columns:auto 1fr auto; }
+.item .th { width:56px; height:56px; object-fit:contain; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.14); }
+.item .th.blank { display:grid; place-items:center; font-size:26px; }
 .item b { font-size:20px; } .item small { color:var(--pale); font-size:14px; letter-spacing:1px; text-transform:uppercase; }
 .item .buy { all:unset; cursor:pointer; padding:6px 14px; background:var(--white); color:#0a1a4d; font-weight:800; font-size:17px; border:2px solid var(--ink); box-shadow:3px 3px 0 var(--bright); }
 .item .buy[disabled] { opacity:.45; cursor:default; }
-.lv { display:flex; gap:3px; grid-column:1 / -1; }
+.lv { display:flex; gap:3px; grid-column:2 / -1; }
+.sws { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.sw { all:unset; cursor:pointer; width:24px; height:24px; border:2px solid rgba(255,255,255,.5); display:grid; place-items:center; font-size:13px; color:var(--pale); background:transparent; transform:skewX(-12deg); }
+.sw.on { outline:3px solid var(--white); outline-offset:2px; border-color:var(--ink); }
+.sw:focus-visible { outline:3px solid var(--cyan); outline-offset:2px; }
+.cz { display:grid; grid-template-columns:90px 1fr; align-items:center; gap:8px; margin-top:8px; font-size:17px; font-weight:700; }
+.item .buy[aria-pressed="true"] { background:var(--cyan); }
 .lv i { flex:1; height:6px; background:rgba(255,255,255,.15); } .lv i.on { background:var(--cyan); }
 .code { font-family:Bangers, cursive; font-size:54px; letter-spacing:8px; text-align:center; color:var(--ink); background:var(--gold); border:3px solid var(--ink); margin-top:14px; padding:4px 0; }
 .note { font-size:17px; color:var(--pale); margin-top:12px; line-height:1.3; }
@@ -139,7 +149,8 @@ footer a { text-decoration:none; }
   <nav class="menu" id="menu" aria-label="Hub menu"></nav>
   <section class="hero" aria-label="Your Spooner">
     <div class="glow" aria-hidden="true"></div><div class="ring" aria-hidden="true"></div>
-    <svg class="sp" role="img" aria-label="Your Spooner" viewBox="0 0 250 400">
+    <canvas id="spc" class="spc" width="500" height="560" hidden aria-label="Your Spooner" role="img"></canvas>
+    <svg class="sp" id="spSvg" role="img" aria-label="Your Spooner" viewBox="0 0 250 400">
       <ellipse cx="125" cy="384" rx="90" ry="12" fill="#020617" opacity=".55"/>
       <rect x="111" y="200" width="28" height="170" rx="14" fill="#dfe9ff" stroke="#0a0f1f" stroke-width="5"/>
       <ellipse cx="125" cy="128" rx="82" ry="104" fill="#fff" stroke="#0a0f1f" stroke-width="6"/>
@@ -185,7 +196,7 @@ footer a { text-decoration:none; }
   const DEFAULT_ENTRIES = [
     { key: "raids", name: "RAIDS", tag: "Live", kicker: "TEAM UP IN CHAT", desc: "Join the stream raid and fight the boss together with chat commands. Beat it and everyone gets 3 big chests of coins.", show: true },
     { key: "horde", name: "HORDE", tag: "Soon", kicker: "SURVIVE THE WAVES", desc: "Hold the line against wave after wave. Coming after raids.", show: true },
-    { key: "character", name: "CHARACTER", tag: "", kicker: "BUILD YOUR SPOONER", desc: "Your Spooner already lives on stream: type !skin, !color or !hat in chat. The full creator is coming here.", show: true },
+    { key: "character", name: "CHARACTER", tag: "", kicker: "BUILD YOUR SPOONER", desc: "Pick what your Spooner wears and colour it. Save, and your stream avatar wears it too.", show: true },
     { key: "shop", name: "SHOP", tag: "Coins", kicker: "SPEND YOUR COINS", desc: "Buy colours, add-ons and companions. Each cosmetic levels up to 10 as you chat, battle and use emotes, and every level raises your Aura.", show: true },
     { key: "loot", name: "LOOT", tag: "", kicker: "RAID REWARDS", desc: "Every boss you help beat drops 3 big chests of coins. Sign in to collect them.", show: true },
     { key: "link", name: "LINK CHAT", tag: "YT · TW", kicker: "YOUTUBE & TWITCH", desc: "Played raids from YouTube or Twitch chat? Get a code here and type it in chat during a stream. Your coins from that name become yours.", show: true },
@@ -230,20 +241,56 @@ footer a { text-decoration:none; }
     else if (e.key === "link") body = linkHtml();
     else if (e.key === "discord") body = `<div class="facts">${fact("Server", esc(SITE.community || "OnionS Spoon Alliance"))}${(SITE.discord || {}).voiceChannel ? fact("Raid voice channel", esc(SITE.discord.voiceChannel)) : ""}</div>` + ctaLink("OPEN DISCORD", (SITE.links || {}).discord);
     else if (e.key === "schedule") body = `<div class="facts">${(SITE.schedule || []).filter(s => s.status !== "cancelled").slice(0, 6).map(s => fact(DAYS[s.day] + " " + (s.start || ""), esc(s.game || "TBA"))).join("") || fact("Schedule", "Coming soon")}</div>` + `<a class="cta" href="./#schedule"><span class="comic">FULL SCHEDULE</span></a>`;
-    else if (e.key === "character") body = `<div class="facts">${fact("On stream", "!skin · !color · !hat")}${fact("Creator", "Coming soon")}</div>`;
+    else if (e.key === "character") body = creatorHtml();
     else body = `<div class="facts">${fact("Status", "Coming soon")}</div>`;
     $("detail").innerHTML = `<div class="kick">${esc(e.kicker)}</div><h1>${esc(e.name)}</h1><div class="bubble">${esc(e.desc)}</div>${body}`;
   }
   function needSignIn(what) { return `<p class="note">Sign in to ${what}.</p>` + cta("SIGN IN", 'data-act="signin"'); }
+  function thumb(id) {
+    const p = SPD && SPD.parts && SPD.parts[id];
+    return p ? `<img class="th" src="spooners/${esc(p.src)}" alt="" loading="lazy">` : `<span class="th blank" aria-hidden="true">✨</span>`;
+  }
   function shopHtml() {
     if (!sb) return `<p class="note">The shop opens soon.</p>`;
     if (!shop.length) return `<p class="note">Nothing in the shop yet. New cosmetics drop soon.</p>`;
     return `<div class="list">${shop.map(it => {
       const o = owned[it.id], lv = o ? o.level : 0;
-      return `<div class="item"><div><b>${esc(it.name)}</b><br><small>${esc(it.category || "cosmetic")}${o ? " · level " + lv + "/" + it.max_level : ""}</small></div>
+      return `<div class="item">${thumb(it.id)}<div><b>${esc(it.name)}</b><br><small>${esc(it.category || "cosmetic")}${o ? " · level " + lv + "/" + it.max_level : ""}</small></div>
         ${o ? `<small>OWNED</small>` : `<button class="buy" type="button" data-buy="${esc(it.id)}" ${!user || (me.coins ?? 0) < it.price ? "disabled" : ""}>🪙 ${nf(it.price)}</button>`}
         ${o ? `<div class="lv">${Array.from({ length: it.max_level }, (_, i) => `<i class="${i < lv ? "on" : ""}"></i>`).join("")}</div>` : ""}</div>`;
     }).join("")}</div>${user ? "" : needSignIn("buy cosmetics")}`;
+  }
+  // ---------------------------------------------------------------- the character creator
+  const SW = ["#ff4f8b", "#ff3b3b", "#ff8a2a", "#ffd34d", "#56d97b", "#2fd4c4", "#37b8ff", "#1f56d6", "#8a5cff", "#ffffff", "#2a2d3a"];
+  let look = { paint: {} }, lookDirty = false;
+  function swatches(attr, id, cur) {
+    return `<div class="sws">${[""].concat(SW).map(c => `<button type="button" class="sw${(cur || "") === c ? " on" : ""}" ${attr}="${esc(id)}" data-c="${c}" aria-label="${c ? "Colour " + c : "As drawn"}" aria-pressed="${(cur || "") === c}" style="${c ? "background:" + c : ""}">${c ? "" : "✕"}</button>`).join("")}</div>`;
+  }
+  function bodyZones() {
+    const d = SPD && SPD.characters && SPD.characters[baseId()]; if (!d) return [];
+    const z = d.layers.filter(l => l.zone).map(l => ({ id: l.id, name: l.zone }));
+    if (z.length) return z;
+    const root = d.layers.find(l => !l.parent) || d.layers[0]; return root ? [{ id: root.id, name: "Body" }] : [];
+  }
+  function creatorHtml() {
+    if (!user) return needSignIn("dress your Spooner");
+    const zones = bodyZones(), mine = shop.filter(it => owned[it.id]).concat(Object.keys(owned).filter(id => !shop.some(s => s.id === id)).map(id => ({ id, name: id })));
+    let h = "";
+    if (zones.length) h += `<div class="kick" style="margin-top:16px">BODY COLOUR</div>` + zones.map(z => `<div class="cz"><span>${esc(z.name)}</span>${swatches("data-paint", z.id, look.paint[z.id])}</div>`).join("");
+    h += `<div class="kick" style="margin-top:16px">WEARING</div>`;
+    h += mine.length ? `<div class="list">${mine.map(it => { const o = owned[it.id], on = o.worn !== false;
+      return `<div class="item">${thumb(it.id)}<div><b>${esc(it.name)}</b><br><small>level ${o.level || 1}</small></div>
+        <button class="buy" type="button" data-wear="${esc(it.id)}" aria-pressed="${on}">${on ? "WEARING" : "WEAR"}</button>
+        <div style="grid-column:2 / -1">${swatches("data-color", it.id, o.color)}</div></div>`; }).join("")}</div>`
+      : `<p class="note">You don't own any cosmetics yet. Win raid chests, then pick something in the SHOP.</p>`;
+    return h + cta(lookDirty ? "SAVE MY LOOK" : "SAVED", 'data-act="save"' + (lookDirty ? "" : " disabled"));
+  }
+  async function saveLook(btn) {
+    if (!lookDirty || !user) return; btn.disabled = true;
+    const items = Object.values(owned).map(o => ({ item: o.item_id, worn: o.worn !== false, color: o.color || null }));
+    const { error } = await sb.rpc("save_look", { items, paint: look.paint });
+    if (error) { toast(error.message, 4000); btn.disabled = false; return; }
+    lookDirty = false; renderDetail(); toast("Saved! Your stream avatar updates within 2 minutes.", 3600);
   }
   function lootHtml() {
     if (!user) return needSignIn("collect your raid chests");
@@ -257,11 +304,15 @@ footer a { text-decoration:none; }
     return list + cta("GET MY CODE", 'data-act="code"');
   }
   $("detail").addEventListener("click", async ev => {
-    const b = ev.target.closest("[data-act],[data-buy]"); if (!b) return;
+    const b = ev.target.closest("[data-act],[data-buy],[data-wear],[data-color],[data-paint]"); if (!b) return;
     if (b.dataset.act === "signin") openSignIn();
     if (b.dataset.act === "claim") claim(true);
     if (b.dataset.act === "code") newCode();
     if (b.dataset.buy) buy(b.dataset.buy, b);
+    if (b.dataset.act === "save") saveLook(b);
+    if (b.dataset.wear) { const o = owned[b.dataset.wear]; o.worn = o.worn === false; lookDirty = true; dressUp(); renderDetail(); }
+    if (b.dataset.color) { owned[b.dataset.color].color = b.dataset.c || null; lookDirty = true; dressUp(); renderDetail(); }
+    if (b.dataset.paint) { if (b.dataset.c) look.paint[b.dataset.paint] = b.dataset.c; else delete look.paint[b.dataset.paint]; lookDirty = true; dressUp(); renderDetail(); }
   });
 
   // ---------------------------------------------------------------- account
@@ -281,7 +332,7 @@ footer a { text-decoration:none; }
   $("who").onclick = async () => {
     if (!sb) return toast("Sign-in isn't set up yet");
     if (!user) return openSignIn();
-    if (confirmOut()) { await sb.auth.signOut(); user = null; me = { coins: null, aura: 0 }; owned = {}; loot = []; links = []; code = null; paintMe(); renderMenu(); }
+    if (confirmOut()) { await sb.auth.signOut(); user = null; me = { coins: null, aura: 0 }; owned = {}; loot = []; links = []; code = null; look = { paint: {} }; lookDirty = false; paintMe(); renderMenu(); dressUp(); }
   };
   function confirmOut() { return window.confirm("Sign out of the Spooners Hub?"); }
   function nameOf(u) { const m = (u && u.user_metadata) || {}; return m.custom_claims?.global_name || m.full_name || m.name || m.user_name || (u && u.email ? u.email.split("@")[0] : "Spooner"); }
@@ -299,14 +350,18 @@ footer a { text-decoration:none; }
     if (!user) return;
     const [a, o, l, k] = await Promise.all([
       sb.from("player_aura").select("coins,aura").eq("id", user.id).maybeSingle(),
-      sb.from("owned").select("item_id,level"),
+      sb.from("owned").select("item_id,level,worn,color").then(r => r.error ? sb.from("owned").select("item_id,level") : r),
       sb.from("raid_loot").select("boss,coins,chests,platform,won_at").order("won_at", { ascending: false }).limit(50),
       sb.from("linked_accounts").select("platform,login")
     ]);
     if (a.data) me = { coins: a.data.coins, aura: a.data.aura };
-    owned = Object.fromEntries((o.data || []).map(x => [x.item_id, x]));
+    if (!lookDirty) {
+      owned = Object.fromEntries((o.data || []).map(x => [x.item_id, x]));
+      const pl = await sb.from("players").select("look").eq("id", user.id).maybeSingle();
+      look = { paint: Object.assign({}, ((pl.data || {}).look || {}).paint || {}) };
+    }
     loot = l.data || []; links = k.data || [];
-    paintMe(); renderMenu();
+    paintMe(); renderMenu(); dressUp();
   }
   async function claim(manual) {
     if (!user) return;
@@ -354,6 +409,50 @@ footer a { text-decoration:none; }
   }
   // Cutroom › Webpage preview: changes show as you type
   addEventListener("message", ev => { if (ev.origin !== location.origin || !ev.data || ev.data.type !== "site-data") return; SITE = ev.data.data || {}; applySite(); renderMenu(); });
+  // ---------------------------------------------------------------- your Spooner (Cutroom copies the Workflow export to spooners/ when you publish)
+  let SPD = null, puppet = null, spBox = null, dressKey = "";
+  function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+  async function loadSpooners() {
+    try { await loadScript("spooners/spooner-player.js"); await loadScript("spooners/spooners-data.js"); } catch (e) { return; }
+    SPD = window.SPOONERS_DATA || null; if (!SPD || !window.SpoonerPlayer) return;
+    await dressUp(); renderDetail();
+  }
+  function baseId() {
+    const want = (SITE.hub || {}).base, ch = SPD.characters || {};
+    if (want && ch[want]) return want;
+    return Object.keys(ch).find(k => ch[k].base) || Object.keys(ch)[0];
+  }
+  async function dressUp() {
+    if (!SPD) return;
+    const base = baseId(); if (!base) return;
+    const items = new Set((SPD.items || []).map(i => i.id)), worn = Object.keys(owned).filter(id => items.has(id) && owned[id].worn !== false);
+    const equipped = worn.map(item => ({ item, color: owned[item].color ? { color: owned[item].color } : null }));
+    const paint = Object.fromEntries(Object.entries(look.paint || {}).map(([k, c]) => [k, { color: c }]));
+    const key = base + "|" + JSON.stringify(equipped) + JSON.stringify(paint); if (key === dressKey) return; dressKey = key;
+    try {
+      const p = await SpoonerPlayer.loadOutfit(SPD, { base, equipped, paint }, "spooners/");
+      const SP = window.SpoonerPlayer, def = p.def, clip = (def.clips || {}).idle ? "idle" : Object.keys(def.clips || {})[0], pose = SP.poseAt(def, clip, 0), W = SP.world(def, pose, null);
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (const L of def.layers) { const g = p.images[pose[L.id].img], m = W[L.id]; if (!g || !m || L.hidden) continue; const gw = g.naturalWidth || g.width, gh = g.naturalHeight || g.height; if (!gw) continue;
+        const ps = L.ps || 1, w = gw * ps, h = gh * ps, ox = -(L.px || 0) * ps, oy = -(L.py || 0) * ps;
+        for (const [x, y] of [[ox, oy], [ox + w, oy], [ox, oy + h], [ox + w, oy + h]]) { const X = m[0] * x + m[2] * y + m[4], Y = m[1] * x + m[3] * y + m[5]; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); } }
+      spBox = x0 > x1 ? { cx: 0, bottom: 0, w: 200, h: 200 } : { cx: (x0 + x1) / 2, bottom: y1, w: x1 - x0, h: y1 - y0 };
+      puppet = p; $("spc").hidden = false; $("spSvg").style.display = "none";
+    } catch (e) { console.warn("Spooner didn't load", e); }
+  }
+  let spLast = 0;
+  function spLoop(t) {
+    requestAnimationFrame(spLoop);
+    if (!puppet || document.hidden) { spLast = t; return; }
+    const dt = Math.min(.05, (t - (spLast || t)) / 1000); spLast = t;
+    puppet.update(dt);
+    const c = $("spc"), x = c.getContext("2d"), b = spBox, k = Math.min((c.height - 30) / Math.max(1, b.h), (c.width - 40) / Math.max(1, b.w));
+    x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+    puppet.draw(x, c.width / 2 - b.cx * k, c.height - 14 - b.bottom * k, k, false);
+  }
+  requestAnimationFrame(spLoop);
+  $("spc").addEventListener("click", () => { if (puppet && puppet.has("cheer")) puppet.play("cheer", { restart: true }); });
+
   async function start() {
     try { SITE = await (await fetch("data/site.json", { cache: "no-cache" })).json(); } catch (e) { SITE = {}; }
     applySite();
@@ -368,6 +467,7 @@ footer a { text-decoration:none; }
       if (user) await claim(false);
     }
     paintMe(); renderMenu();
+    loadSpooners();
   }
   start();
 })();
