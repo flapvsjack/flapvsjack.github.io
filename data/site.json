@@ -133,7 +133,7 @@
       },
       {
         "name": "Spoon shop",
-        "text": "Spend the XP you earn chatting and raiding on skins, hats and moves."
+        "text": "Spend the coins you win in raids on colours, add-ons and companions. Level them up to raise your Aura."
       },
       {
         "name": "Raids & Horde online",
@@ -237,5 +237,5 @@
     "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppY2puZmticmhia2lmdnBpY25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTcwMTksImV4cCI6MjExMDY3MzAxOX0.tkRYZ6wbOUFkCRQje-qIpUJl--xqOb2Sj3qrcJAwD8I",
     "providers": "discord"
   },
-  "updated": "2026-11-19T09:51:22"
+  "updated": "2026-11-19T09:58:41"
 }

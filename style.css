@@ -441,3 +441,16 @@ body::before{background:var(--a-deep)}
   .win-time{grid-column:2/-1;justify-self:end}
 }
 @media (max-width:859px){.sched-side h2{display:none}}
+
+/* Spooners Hub: link to the game hub (hub.html) */
+.hubbtn{display:inline-flex;align-items:center;gap:12px;margin:18px 0 0;padding:14px 26px;background:#fff;color:var(--a-deep,#0b4f6c);font-family:"Chakra Petch",sans-serif;font-weight:700;font-style:italic;font-size:20px;text-decoration:none;border-radius:6px;transform:skewX(-10deg);box-shadow:6px 6px 0 rgba(4,30,48,.45);transition:transform .15s,box-shadow .15s}
+.hubbtn>*{transform:skewX(10deg)}
+.hubbtn:hover,.hubbtn:focus-visible{transform:skewX(-10deg) translateY(-2px);box-shadow:8px 9px 0 rgba(4,30,48,.5);color:var(--a-deep,#0b4f6c)}
+.hubnote{margin:12px 0 0;color:#fff;opacity:.92;font-size:15px}
+.shopcard{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 22px;background:#fff;color:#0d2233;border-radius:10px;text-decoration:none;box-shadow:0 6px 0 rgba(4,30,48,.25)}
+.shopcard:hover{transform:translateY(-2px)}
+.shopcard .sc-coin{font-size:40px}
+.shopcard .sc-txt b{display:block;font-size:19px;margin:0 0 4px}
+.shopcard .sc-txt span{color:#3d5466;font-size:15px}
+.shopcard .sc-go{background:var(--a,#1787b4);color:#fff;font-weight:700;padding:10px 16px;border-radius:6px;white-space:nowrap}
+@media (max-width:640px){.shopcard{grid-template-columns:auto 1fr}.shopcard .sc-go{grid-column:1/-1;text-align:center}}

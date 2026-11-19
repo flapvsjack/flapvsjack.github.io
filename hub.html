@@ -357,6 +357,7 @@ footer a { text-decoration:none; }
   async function start() {
     try { SITE = await (await fetch("data/site.json", { cache: "no-cache" })).json(); } catch (e) { SITE = {}; }
     applySite();
+    { const h = location.hash.slice(1), i = ENTRIES.filter(e => e.show !== false).findIndex(e => e.key === h); if (i >= 0) sel = i; }   // hub.html#shop opens the shop
     const on = SITE.online || {};
     if (on.url && on.anonKey && window.supabase) {
       sb = window.supabase.createClient(on.url, on.anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: "pkce" } });

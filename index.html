@@ -53,8 +53,8 @@
               <h2>Spooners Hub</h2>
               <p class="lead" id="spBlurb"></p>
               <ul class="features" id="spFeatures"></ul>
-              <p class="row"><a class="btn btn-a" href="hub.html">Open the Spooners Hub →</a></p>
-              <p class="small">Sign in to collect your raid coins, shop cosmetics and link your YouTube or Twitch chat name.</p>
+              <a class="hubbtn" href="hub.html"><span>Open the Spooners Hub</span><b aria-hidden="true">→</b></a>
+              <p class="hubnote">Sign in to collect your raid coins, shop cosmetics and link your YouTube or Twitch chat name.</p>
             </div>
             <div class="creator" aria-label="Character creator preview">
               <span class="label">Character creator · preview</span>
@@ -68,8 +68,13 @@
             </div>
           </div>
           <div class="shop">
-            <div class="shop-h"><h3>Spoon shop</h3><span class="pill pill-soft">Coming with the game</span></div>
-            <div class="shopgrid" id="shopGrid"></div>
+            <div class="shop-h"><h3>Spoon shop</h3><span class="pill pill-soft">Open now</span></div>
+            <a class="shopcard" href="hub.html#shop">
+              <span class="sc-coin" aria-hidden="true">🪙</span>
+              <span class="sc-txt"><b>Spend your raid coins</b><span>Beat a raid boss and everyone gets 3 big chests of coins. Buy colours, add-ons and companions in the Hub, then level them up to raise your Aura.</span></span>
+              <span class="sc-go">Shop in the Hub →</span>
+            </a>
+            <div class="shopgrid" id="shopGrid" hidden></div>
           </div>
         </div>
       </div>
