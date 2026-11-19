@@ -89,11 +89,16 @@
     const c = Math.round(Math.max(76, Math.min(120, W * 0.085)));   // width of a closed strip
     return { W, H, s, c };
   }
-  function targets(key, g) {
+  let hoverKey = "";
+  function targets(key, g, hover) {
     const { W, s, c } = g;
     if (key === "hub") { const b = W - c - s; return [b - c, b]; }
     if (key === "discord") return [c + s, W - c - s];
     if (key === "schedule") { const a = c + s; return [a, a + c]; }
+    const n = W * 0.07;                 // nothing open: the panel under the mouse leans out a little
+    if (hover === "hub") return [W / 3 + n, (2 * W) / 3 + n * 0.45];
+    if (hover === "discord") return [W / 3 - n * 0.6, (2 * W) / 3 + n * 0.6];
+    if (hover === "schedule") return [W / 3 - n * 0.45, (2 * W) / 3 - n];
     return [W / 3, (2 * W) / 3];
   }
   function paint() {
@@ -106,35 +111,51 @@
     set(panels.discord, `polygon(${d1 + s + gap}px 0,${d2 + s - gap}px 0,${d2 - s - gap}px 100%,${d1 - s + gap}px 100%)`, d1 + s + gap, d2 - d1 - 2 * s - 2 * gap, d1 + gap, d2 - d1 - 2 * gap);
     set(panels.schedule, `polygon(${d2 + s + gap}px 0,${W}px 0,${W}px 100%,${d2 - s + gap}px 100%)`, d2 + s + gap, W - d2 - s - gap, d2 + gap, W - d2 - gap);
   }
-  function layout(animate) {
+  // open/close: quick start, soft settle with a slight overshoot. Hover: shorter and calmer.
+  const easeOpen = (x) => { const c1 = 0.7, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  const easeHover = (x) => 1 - Math.pow(1 - x, 3);
+  function layout(animate, kind) {
     if (!wide()) { Object.values(panels).forEach((p) => { p.style.removeProperty("--clip"); }); return; }
-    const g = geometry(), [t1, t2] = targets(openKey, g);
+    const g = geometry(), [t1, t2] = targets(openKey, g, hoverKey);
     cancelAnimationFrame(anim);
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!animate || reduce || !d2) { d1 = t1; d2 = t2; paint(); return; }
-    const f1 = d1, f2 = d2, t0 = performance.now(), dur = 620;
-    const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+    if (!animate || reduce || !d2) { d1 = t1; d2 = t2; paint(); stage.classList.remove("moving"); return; }
+    const hover = kind === "hover", f1 = d1, f2 = d2, t0 = performance.now(), dur = hover ? 420 : 820, ease = hover ? easeHover : easeOpen;
+    if (!hover) stage.classList.add("moving");
     const step = (now) => {
       const k = Math.min(1, (now - t0) / dur), e = ease(k);
       d1 = f1 + (t1 - f1) * e; d2 = f2 + (t2 - f2) * e; paint();
-      if (k < 1) anim = requestAnimationFrame(step);
+      if (k < 1) anim = requestAnimationFrame(step); else stage.classList.remove("moving");
     };
     anim = requestAnimationFrame(step);
   }
+  function stagger(p) {           // the opened panel's blocks slide in from the right, one after another
+    const kids = [...p.querySelectorAll(".p3-scroll > :not(.p3-close)")];
+    kids.forEach((el, i) => el.style.setProperty("--i", i));
+    p.classList.remove("enter"); void p.offsetWidth; p.classList.add("enter");
+  }
   function openPanel(key, scroll) {
     openKey = key && openKey !== key ? key : (key && scroll ? key : "");
+    hoverKey = "";
     stage.classList.toggle("has-open", !!openKey);
     for (const [k, p] of Object.entries(panels)) {
       const on = k === openKey;
       p.classList.toggle("open", on);
+      if (on) stagger(p); else p.classList.remove("enter");
       p.querySelector(".p3-head").setAttribute("aria-expanded", on ? "true" : "false");
       p.querySelector(".p3-body").setAttribute("aria-hidden", on ? "false" : "true");
     }
     document.querySelectorAll(".mainnav a[data-open]").forEach((a) => a.classList.toggle("on", a.dataset.open === openKey));
     layout(true);
+    if (openKey === "schedule") replayCascade();
     if (openKey && !wide()) panels[openKey].scrollIntoView({ behavior: "smooth", block: "start" });
     else if (scroll) stage.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+  const canHover = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+  Object.entries(panels).forEach(([k, p]) => {
+    p.addEventListener("pointerenter", () => { if (!openKey && wide() && canHover() && hoverKey !== k) { hoverKey = k; layout(true, "hover"); } });
+  });
+  stage.addEventListener("pointerleave", () => { if (!openKey && hoverKey) { hoverKey = ""; layout(true, "hover"); } });
   Object.entries(panels).forEach(([k, p]) => {
     p.querySelector(".p3-head").addEventListener("click", () => openPanel(k));
     const close = document.createElement("button");
@@ -246,6 +267,7 @@
           `<span class="slot-game">${esc(s.game || "TBA")}</span><div class="tags">${platTags(s.platform)}${fmtTags(s.format)}${s.status === "tentative" ? '<span class="tag st">Maybe</span>' : s.status === "cancelled" ? '<span class="tag">Cancelled</span>' : ""}</div>` +
           (s.notes ? `<span class="slot-notes">${esc(s.notes)}</span>` : "") + "</div>").join("") : '<span class="offday">No stream</span>') + "</div>";
     }).join("");
+    renderCascade(lbl, w, dates);
     $("shelves").innerHTML = SHELVES.map((st) => {
       const gs = (S.games || []).filter((g) => g.status === st);
       return `<div class="shelf"><div class="shelf-h"><span>${st}</span><span>${gs.length}</span></div>` +
@@ -258,6 +280,49 @@
     $("tzNote").textContent = `All times are ${lbl} (${tz().replace("_", " ")}).`;
     renderNext();
   }
+  // Each stream is a window, cascading down and to the right from today. Click a title bar to open that window.
+  let activeWin = "";
+  function renderCascade(lbl, w, dates) {
+    const order = (s) => ((+s.day - w.day + 7) % 7) * 1440 + toMin(s.start);
+    const list = (S.schedule || []).filter((s) => s.day >= 0 && s.day <= 6).slice().sort((a, b) => order(a) - order(b));
+    const nx = nextStream();
+    if (!list.some((s) => s.id === activeWin)) activeWin = (nx && nx.s.id) || (list[0] && list[0].id) || "";
+    const box = $("cascade");
+    box.style.setProperty("--n", Math.max(1, list.length));
+    box.innerHTML = list.length ? list.map((s, i) => {
+      const ahead = (+s.day - w.day + 7) % 7;      // the coming date for this stream, so past days show next week's date
+      const dt = new Date(dates[w.day].getTime() + ahead * 86400000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+      const live = nx && nx.live && nx.s === s, on = s.id === activeWin;
+      const badge = live ? '<span class="win-badge live">LIVE</span>' : +s.day === w.day ? '<span class="win-badge">TODAY</span>' :
+        s.status === "tentative" ? '<span class="win-badge maybe">MAYBE</span>' : s.status === "cancelled" ? '<span class="win-badge off">CANCELLED</span>' : "";
+      return `<article class="win ${esc(s.status)}${on ? " front" : ""}" style="--i:${i}" data-id="${esc(s.id)}">` +
+        `<button type="button" class="win-bar" aria-expanded="${on}"><span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>` +
+        `<span class="win-day">${DAYS[s.day]} · ${dt}</span><span class="win-title">${esc(s.game || "TBA")}</span>${badge}` +
+        `<span class="win-time">${fmt(s.start)}${s.end ? " – " + fmt(s.end) : ""} ${esc(lbl)}</span></button>` +
+        `<div class="win-body"><div class="win-in"><div class="win-game">${esc(s.game || "TBA")}</div>` +
+        `<div class="tags">${platTags(s.platform)}${fmtTags(s.format)}</div>` +
+        (s.notes ? `<p class="win-notes">${esc(s.notes)}</p>` : "") +
+        `<p class="win-when">${DAYS_LONG[s.day]}, ${fmt(s.start)}${s.end ? " to " + fmt(s.end) : ""} ${esc(lbl)}</p></div></div></article>`;
+    }).join("") : '<p class="offday">No streams this week yet.</p>';
+    const busy = new Set(list.map((s) => +s.day));
+    const off = DAYS.filter((_, i) => !busy.has(i));
+    $("offDays").textContent = off.length && list.length ? `No stream: ${off.join(" · ")}` : "";
+  }
+  function replayCascade() {
+    const box = $("cascade"); box.classList.remove("play"); void box.offsetWidth; box.classList.add("play");
+  }
+  $("cascade").addEventListener("click", (e) => {
+    const bar = e.target.closest(".win-bar"); if (!bar) return;
+    const win = bar.parentElement; activeWin = win.dataset.id;
+    $("cascade").querySelectorAll(".win").forEach((x) => { const on = x === win; x.classList.toggle("front", on); x.querySelector(".win-bar").setAttribute("aria-expanded", on); });
+  });
+  document.querySelector("#view-week .viewtoggle").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-mode]"); if (!b) return;
+    const grid = b.dataset.mode === "grid";
+    document.querySelectorAll("#view-week .viewtoggle button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $("week").hidden = !grid; $("cascade").hidden = grid; $("offDays").hidden = grid;
+    if (!grid) replayCascade();
+  });
   function renderNext() {
     const nx = nextStream(), lbl = S.tzLabel || "CT", card = $("nextCard");
     if (!nx) { card.innerHTML = '<span class="onair">NO STREAMS SET</span><div class="next-game">Check back soon</div>'; $("schedTeaser").textContent = "New schedule coming soon"; return; }

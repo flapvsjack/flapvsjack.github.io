@@ -9,6 +9,8 @@
 <meta property="og:description" content="Spooners hub, Discord raids and the stream schedule.">
 <meta property="og:image" content="assets/raid-card-chad.jpg">
 <meta name="theme-color" content="#1787b4">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -19,7 +21,7 @@
 
 <header class="topbar">
   <div class="topbar-in">
-    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">🥄</span><span id="brandName">flapvsjack</span></a>
+    <a class="brand" href="#top"><img class="brand-logo" src="assets/logo.png" alt="" width="36" height="36"><span id="brandName">flapvsjack</span></a>
     <nav class="mainnav" aria-label="Sections">
       <a href="#hub" data-open="hub">Spooners Hub</a>
       <a href="#discord" data-open="discord">Discord</a>
@@ -51,6 +53,8 @@
               <h2>Spooners Hub</h2>
               <p class="lead" id="spBlurb"></p>
               <ul class="features" id="spFeatures"></ul>
+              <p class="row"><a class="btn btn-a" href="hub.html">Open the Spooners Hub →</a></p>
+              <p class="small">Sign in to collect your raid coins, shop cosmetics and link your YouTube or Twitch chat name.</p>
             </div>
             <div class="creator" aria-label="Character creator preview">
               <span class="label">Character creator · preview</span>
@@ -121,7 +125,13 @@
           </div>
           <p class="weeknote" id="weekNote" hidden></p>
           <div id="view-week">
-            <div class="week" id="week"></div>
+            <div class="viewtoggle" role="group" aria-label="Show the week as">
+              <button type="button" data-mode="cascade" aria-pressed="true">Windows</button>
+              <button type="button" data-mode="grid" aria-pressed="false">Week grid</button>
+            </div>
+            <div class="cascade" id="cascade"></div>
+            <p class="offdays" id="offDays"></p>
+            <div class="week" id="week" hidden></div>
             <div class="legend"><span><b class="lg ok"></b>Confirmed</span><span><b class="lg maybe"></b>Maybe</span><span><b class="lg off"></b>Cancelled</span></div>
           </div>
           <div id="view-games" hidden><div class="shelves" id="shelves"></div></div>

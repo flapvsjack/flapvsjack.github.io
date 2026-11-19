@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spooners Hub</title>
+<meta name="description" content="Spooners Hub: raid coins, the shop and your Spooner.">
+<meta name="theme-color" content="#071438">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root { --ink:#0a0f1f; --navy:#050b1f; --blue:#1f56d6; --bright:#1f6bff; --cyan:#7fe9ff; --pale:#9fd8ff; --white:#fff; --gold:#ffd34d; --bad:#ff7a8a; }
+* { box-sizing:border-box; }
+html, body { margin:0; min-height:100%; } html { overflow-x:hidden; }
+body { font-family:'Barlow Condensed', system-ui, sans-serif; color:var(--white); background:var(--navy); overflow-x:hidden; }
+a { color:var(--cyan); } a:hover { color:var(--white); }
+button { font:inherit; color:inherit; }
+:focus-visible { outline:3px solid var(--white); outline-offset:3px; }
+.bg { position:fixed; inset:0; z-index:-1; overflow:hidden; background:radial-gradient(ellipse 60% 70% at 62% 48%, #1f56d6 0%, #0d2a7a 38%, #071438 70%, #050b1f 100%); }
+.bg::before { content:""; position:absolute; inset:0; background:repeating-linear-gradient(-62deg, transparent 0 46px, rgba(255,255,255,.035) 46px 50px); }
+.bg::after { content:""; position:absolute; right:-80px; top:-60px; width:760px; height:560px; transform:rotate(-12deg); background-image:radial-gradient(rgba(127,233,255,.16) 1.2px, transparent 1.6px); background-size:14px 14px; -webkit-mask-image:radial-gradient(closest-side, #000 30%, transparent 100%); mask-image:radial-gradient(closest-side, #000 30%, transparent 100%); }
+.skew { transform:skewX(-12deg); } .unskew { display:inline-block; transform:skewX(12deg); }
+.comic { font-family:Bangers, cursive; font-weight:400; letter-spacing:1.5px; }
+
+header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px clamp(16px, 4vw, 56px); }
+.brand { display:flex; align-items:baseline; gap:14px; text-decoration:none; color:var(--white); }
+.word { font-family:Bangers, cursive; font-size:clamp(40px, 6vw, 58px); letter-spacing:2px; line-height:1; text-shadow:3px 3px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 7px 7px 0 var(--bright); }
+.brand small { font-size:18px; font-weight:700; letter-spacing:4px; color:var(--pale); }
+.stats { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.pill { display:flex; align-items:center; gap:10px; height:46px; padding:0 18px; background:var(--ink); border:3px solid var(--white); box-shadow:5px 5px 0 var(--bright); transform:skewX(-12deg); }
+.pill > * { transform:skewX(12deg); }
+.pill .k { font-size:12px; font-weight:700; letter-spacing:2px; color:var(--pale); line-height:1; }
+.pill .v { font-size:22px; font-weight:800; line-height:1; }
+.pill.btn { cursor:pointer; }
+.pill.btn:hover { background:#13214a; }
+
+.layout { display:grid; grid-template-columns:minmax(260px, 480px) minmax(220px, 1fr) minmax(280px, 400px); gap:clamp(16px, 3vw, 40px); padding:16px clamp(16px, 4vw, 56px) 40px; align-items:start; }
+nav.menu { display:flex; flex-direction:column; gap:12px; }
+.mb { all:unset; box-sizing:border-box; height:64px; display:flex; align-items:center; gap:18px; padding:0 26px; cursor:pointer; transform:skewX(-12deg); background:rgba(10,15,31,.72); border:3px solid rgba(255,255,255,.22); color:var(--white); transition:transform .16s ease, background .16s ease, box-shadow .16s ease; }
+.mb > * { transform:skewX(12deg); }
+.mb svg { flex:none; }
+.mb .nm { font-family:Bangers, cursive; font-size:36px; letter-spacing:1.5px; line-height:1; white-space:nowrap; }
+.mb .tg { white-space:nowrap; }
+.mb .tg { margin-left:auto; font-size:15px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); }
+.mb[aria-pressed="true"] { background:var(--white); color:#0a1a4d; border-color:var(--ink); box-shadow:7px 7px 0 var(--bright), 0 0 34px rgba(127,233,255,.55); transform:skewX(-12deg) translateX(26px); }
+.mb[aria-pressed="true"] .tg { color:var(--blue); }
+.mb:focus-visible { outline:3px solid var(--white); outline-offset:4px; }
+
+.hero { position:relative; display:flex; flex-direction:column; align-items:center; padding-top:20px; }
+.hero .glow { position:absolute; top:30px; width:min(360px, 80vw); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(127,233,255,.55) 0%, rgba(55,184,255,.18) 45%, transparent 70%); }
+.hero .ring { position:absolute; top:64px; width:min(290px, 64vw); aspect-ratio:1; border-radius:50%; border:3px dashed rgba(255,255,255,.35); animation:spin 40s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.hero svg.sp { position:relative; width:min(250px, 56vw); height:auto; animation:bob 3.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform:translateY(-8px); } }
+.plate { position:relative; margin-top:-6px; transform:skewX(-12deg); background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:6px 6px 0 var(--bright); padding:8px 28px; text-align:center; }
+.plate > * { transform:skewX(12deg); }
+.plate .n { font-family:Bangers, cursive; font-size:32px; letter-spacing:1.5px; line-height:1; }
+.plate .r { font-size:15px; font-weight:800; letter-spacing:2px; color:var(--blue); }
+.aura { position:relative; margin-top:16px; width:min(280px, 80vw); }
+.aura .lab { display:flex; justify-content:space-between; font-size:14px; font-weight:700; letter-spacing:2px; color:var(--pale); }
+.aura .bar { height:14px; margin-top:6px; background:var(--ink); border:2px solid var(--white); transform:skewX(-12deg); overflow:hidden; }
+.aura .bar i { display:block; height:100%; width:0; background:linear-gradient(90deg, var(--bright), var(--cyan)); transition:width .6s ease; }
+
+.detail .card { transform:skewX(-6deg); background:var(--ink); border:3px solid var(--white); box-shadow:8px 8px 0 var(--bright); }
+.detail .in { transform:skewX(6deg); padding:24px 28px 26px; }
+.kick { font-size:15px; font-weight:800; letter-spacing:3px; color:var(--cyan); }
+.detail h1 { margin:4px 0 0; font-family:Bangers, cursive; font-weight:400; font-size:clamp(46px, 5vw, 62px); letter-spacing:2px; line-height:.95; text-shadow:4px 4px 0 var(--blue); }
+.bubble { margin-top:16px; background:var(--white); color:#0a1a4d; padding:14px 18px; border:3px solid var(--ink); font-size:20px; font-weight:600; line-height:1.25; }
+.facts { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+.fact { display:flex; justify-content:space-between; align-items:baseline; gap:12px; border-bottom:2px solid rgba(255,255,255,.14); padding-bottom:6px; }
+.fact .k { font-size:16px; font-weight:700; letter-spacing:2px; color:var(--pale); text-transform:uppercase; }
+.fact .v { font-size:21px; font-weight:800; text-align:right; }
+.cta { all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; margin:24px 0 0 auto; min-width:240px; height:62px; padding:0 22px; transform:skewX(-12deg); background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:6px 6px 0 var(--bright); text-decoration:none; transition:transform .12s ease; }
+.cta > * { transform:skewX(12deg); }
+.cta .comic { font-size:32px; letter-spacing:2px; }
+.cta:hover { transform:skewX(-12deg) translateY(-2px); color:#0a1a4d; }
+.cta[disabled] { opacity:.5; cursor:default; }
+.list { margin-top:16px; display:flex; flex-direction:column; gap:10px; max-height:46vh; overflow:auto; padding-right:4px; }
+.item { display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; padding:10px 12px; background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.14); }
+.item b { font-size:20px; } .item small { color:var(--pale); font-size:14px; letter-spacing:1px; text-transform:uppercase; }
+.item .buy { all:unset; cursor:pointer; padding:6px 14px; background:var(--white); color:#0a1a4d; font-weight:800; font-size:17px; border:2px solid var(--ink); box-shadow:3px 3px 0 var(--bright); }
+.item .buy[disabled] { opacity:.45; cursor:default; }
+.lv { display:flex; gap:3px; grid-column:1 / -1; }
+.lv i { flex:1; height:6px; background:rgba(255,255,255,.15); } .lv i.on { background:var(--cyan); }
+.code { font-family:Bangers, cursive; font-size:54px; letter-spacing:8px; text-align:center; color:var(--ink); background:var(--gold); border:3px solid var(--ink); margin-top:14px; padding:4px 0; }
+.note { font-size:17px; color:var(--pale); margin-top:12px; line-height:1.3; }
+.err { color:var(--bad); }
+
+.signin { position:fixed; inset:0; display:grid; place-items:center; background:rgba(2,6,20,.7); z-index:50; }
+.signin[hidden] { display:none; }
+.signin .card { transform:skewX(-6deg); background:var(--ink); border:3px solid var(--white); box-shadow:8px 8px 0 var(--bright); width:min(420px, 92vw); }
+.signin .in { transform:skewX(6deg); padding:24px 28px; display:flex; flex-direction:column; gap:12px; }
+.prov { all:unset; cursor:pointer; display:flex; align-items:center; gap:14px; padding:12px 18px; background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:5px 5px 0 var(--bright); font-size:22px; font-weight:800; }
+.prov:hover { transform:translateY(-2px); }
+.x { all:unset; cursor:pointer; align-self:flex-end; font-size:15px; color:var(--pale); letter-spacing:2px; }
+
+.toast { position:fixed; left:50%; bottom:28px; transform:translateX(-50%) skewX(-12deg); background:var(--white); color:#0a1a4d; border:3px solid var(--ink); box-shadow:6px 6px 0 var(--bright); padding:10px 26px; font-size:22px; font-weight:800; z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; }
+.toast.on { opacity:1; }
+.chests { position:fixed; inset:0; z-index:55; display:grid; place-items:center; pointer-events:none; }
+.chests[hidden] { display:none; }
+.chests .row { display:flex; gap:28px; }
+.chest { width:120px; animation:drop .6s cubic-bezier(.3,1.6,.5,1) both; }
+.chest svg { width:100%; overflow:visible; filter:drop-shadow(0 6px 0 rgba(0,0,0,.45)); }
+.chest .lid { transform-origin:8% 46%; transition:transform .3s cubic-bezier(.3,1.8,.5,1); }
+.chest.open .lid { transform:rotate(-38deg) translateY(-4px); }
+.chest .shine { opacity:0; transition:opacity .2s; } .chest.open .shine { opacity:.95; }
+.chests .total { margin-top:22px; text-align:center; font-family:Bangers, cursive; font-size:64px; letter-spacing:3px; color:var(--gold); -webkit-text-stroke:2px var(--ink); paint-order:stroke fill; text-shadow:5px 5px 0 var(--ink); }
+@keyframes drop { 0% { transform:translateY(-120vh); } 70% { transform:translateY(0) scale(1.08, .9); } 100% { transform:none; } }
+
+footer { padding:0 clamp(16px, 4vw, 56px) 28px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--pale); }
+footer a { text-decoration:none; }
+
+@media (max-width:1100px) { .layout { grid-template-columns:minmax(240px, 420px) 1fr; } .hero { grid-column:1 / -1; order:-1; } }
+@media (max-width:700px) {
+  .layout { grid-template-columns:1fr; }
+  .mb { height:56px; } .mb .nm { font-size:30px; } .mb[aria-pressed="true"] { transform:skewX(-12deg) translateX(10px); }
+  .cta { width:100%; margin-left:0; }
+  .detail { padding-right:10px; } .mb .tg { font-size:13px; letter-spacing:1px; }
+  .chest { width:84px; } .chests .row { gap:12px; }
+}
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<header>
+  <a class="brand" href="./"><span class="word" id="word">SPOONERS</span><small>HUB</small></a>
+  <div class="stats">
+    <div class="pill" title="Aura goes up as you level your cosmetics"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7fe9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3 6 6 1-4.5 4 1 6.5L12 16l-5.5 3.5 1-6.5L3 9l6-1z"/></svg><div><div class="k">AURA</div><div class="v" id="aura">–</div></div></div>
+    <div class="pill" title="Coins from raid chests"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd34d" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.5h-3a1.8 1.8 0 000 3.5h4"/></svg><div class="v" id="coins">–</div></div>
+    <button class="pill btn" type="button" id="who"><span class="v" id="whoTxt">SIGN IN</span></button>
+  </div>
+</header>
+
+<main class="layout">
+  <nav class="menu" id="menu" aria-label="Hub menu"></nav>
+  <section class="hero" aria-label="Your Spooner">
+    <div class="glow" aria-hidden="true"></div><div class="ring" aria-hidden="true"></div>
+    <svg class="sp" role="img" aria-label="Your Spooner" viewBox="0 0 250 400">
+      <ellipse cx="125" cy="384" rx="90" ry="12" fill="#020617" opacity=".55"/>
+      <rect x="111" y="200" width="28" height="170" rx="14" fill="#dfe9ff" stroke="#0a0f1f" stroke-width="5"/>
+      <ellipse cx="125" cy="128" rx="82" ry="104" fill="#fff" stroke="#0a0f1f" stroke-width="6"/>
+      <ellipse cx="125" cy="128" rx="62" ry="82" fill="#cfe2ff"/>
+      <ellipse cx="100" cy="118" rx="13" ry="18" fill="#0a0f1f"/><ellipse cx="150" cy="118" rx="13" ry="18" fill="#0a0f1f"/>
+      <circle cx="104" cy="111" r="5" fill="#fff"/><circle cx="154" cy="111" r="5" fill="#fff"/>
+      <path d="M102 160q23 20 46 0" fill="none" stroke="#0a0f1f" stroke-width="6" stroke-linecap="round"/>
+      <path d="M58 70q-10-40 30-52" fill="none" stroke="#7fe9ff" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <div class="plate"><div class="n" id="pname">GUEST</div><div class="r" id="prank">SIGN IN TO COLLECT COINS</div></div>
+    <div class="aura"><div class="lab"><span>AURA</span><span id="auraNext"></span></div><div class="bar"><i id="auraBar"></i></div></div>
+  </section>
+  <section class="detail" aria-live="polite"><div class="card"><div class="in" id="detail"></div></div></section>
+</main>
+
+<footer><div><a href="./">← Main site</a></div><div id="foot"></div></footer>
+
+<div class="signin" id="signin" hidden><div class="card"><div class="in">
+  <button class="x" type="button" id="signClose">CLOSE ✕</button>
+  <div class="kick">SIGN IN</div><h1 class="comic" style="margin:0;font-size:44px;text-shadow:4px 4px 0 var(--blue)">COLLECT YOUR COINS</h1>
+  <p class="note" style="margin:0">Use the account you play raids with. YouTube viewers: sign in with any of these, then use a <b>!link</b> code.</p>
+  <div id="provs" style="display:flex;flex-direction:column;gap:12px"></div>
+</div></div></div>
+<div class="chests" id="chests" hidden><div><div class="row" id="chestRow"></div><div class="total" id="chestTotal"></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ICON = {
+    raids: "M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2",
+    horde: "M12 3a7 7 0 00-7 7v3l2 2v3h3v-2h4v2h3v-3l2-2v-3a7 7 0 00-7-7zM9 11h.01M15 11h.01",
+    character: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
+    shop: "M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2",
+    loot: "M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4M10 14h4",
+    link: "M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1",
+    discord: "M4 5h16v11H9l-5 4z",
+    schedule: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"
+  };
+  // default menu (Cutroom › Webpage › Spooners Hub menu changes these)
+  const DEFAULT_ENTRIES = [
+    { key: "raids", name: "RAIDS", tag: "Live", kicker: "TEAM UP IN CHAT", desc: "Join the stream raid and fight the boss together with chat commands. Beat it and everyone gets 3 big chests of coins.", show: true },
+    { key: "horde", name: "HORDE", tag: "Soon", kicker: "SURVIVE THE WAVES", desc: "Hold the line against wave after wave. Coming after raids.", show: true },
+    { key: "character", name: "CHARACTER", tag: "", kicker: "BUILD YOUR SPOONER", desc: "Your Spooner already lives on stream: type !skin, !color or !hat in chat. The full creator is coming here.", show: true },
+    { key: "shop", name: "SHOP", tag: "Coins", kicker: "SPEND YOUR COINS", desc: "Buy colours, add-ons and companions. Each cosmetic levels up to 10 as you chat, battle and use emotes, and every level raises your Aura.", show: true },
+    { key: "loot", name: "LOOT", tag: "", kicker: "RAID REWARDS", desc: "Every boss you help beat drops 3 big chests of coins. Sign in to collect them.", show: true },
+    { key: "link", name: "LINK CHAT", tag: "YT · TW", kicker: "YOUTUBE & TWITCH", desc: "Played raids from YouTube or Twitch chat? Get a code here and type it in chat during a stream. Your coins from that name become yours.", show: true },
+    { key: "discord", name: "DISCORD", tag: "", kicker: "ONIONS SPOON ALLIANCE", desc: "Hang out with the community, watch streams and catch raid alerts.", show: true },
+    { key: "schedule", name: "SCHEDULE", tag: "", kicker: "NEXT STREAM", desc: "See when the next stream and raid go live.", show: true }
+  ];
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const PROV = { discord: ["Discord", "#5865F2"], twitch: ["Twitch", "#9146FF"], google: ["Google", "#ffffff"] };
+  let SITE = {}, ENTRIES = DEFAULT_ENTRIES, sel = 0, sb = null, user = null, me = { coins: null, aura: 0 }, shop = [], owned = {}, loot = [], links = [], code = null, codeTimer = null;
+
+  function toast(t, ms = 2600) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), ms); }
+  const nf = n => Number(n || 0).toLocaleString();
+
+  // ---------------------------------------------------------------- menu
+  function renderMenu() {
+    const vis = ENTRIES.filter(e => e.show !== false);
+    if (sel >= vis.length) sel = 0;
+    $("menu").innerHTML = vis.map((e, i) => `<button class="mb" type="button" data-i="${i}" aria-pressed="${i === sel}">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[e.key] || ICON.raids}"/></svg>
+      <span class="nm">${esc(e.name)}</span><span class="tg">${esc(tagFor(e))}</span></button>`).join("");
+    renderDetail();
+  }
+  function tagFor(e) {
+    if (e.key === "loot" && loot.length) return loot.length + " won";
+    if (e.key === "link" && links.length) return links.length + " linked";
+    return e.tag || "";
+  }
+  $("menu").addEventListener("click", ev => { const b = ev.target.closest(".mb"); if (!b) return; sel = +b.dataset.i; renderMenu(); });
+  $("menu").addEventListener("mouseover", ev => { const b = ev.target.closest(".mb"); if (b && +b.dataset.i !== sel && matchMedia("(hover:hover)").matches) { sel = +b.dataset.i; [...$("menu").children].forEach((x, i) => x.setAttribute("aria-pressed", i === sel)); renderDetail(); } });
+  const fact = (k, v) => `<div class="fact"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`;
+  const cta = (txt, attrs) => `<button class="cta" type="button" ${attrs || ""}><span class="comic">${esc(txt)}</span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`;
+  const ctaLink = (txt, href) => href ? `<a class="cta" href="${esc(href)}" target="_blank" rel="noopener"><span class="comic">${esc(txt)}</span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>` : "";
+  function renderDetail() {
+    const e = ENTRIES.filter(x => x.show !== false)[sel]; if (!e) return;
+    let body = "";
+    if (e.key === "raids") {
+      const r = SITE.raids || {};
+      body = fact("When", esc(r.when || "Weekends on Discord")) + (r.modes || []).slice(0, 4).map(m => fact("Mode", esc(m.name))).join("") + fact("Victory reward", "3 big chests each");
+      body = `<div class="facts">${body}</div>` + ctaLink("JOIN THE RAID", (SITE.links || {}).discord);
+    } else if (e.key === "shop") body = shopHtml();
+    else if (e.key === "loot") body = lootHtml();
+    else if (e.key === "link") body = linkHtml();
+    else if (e.key === "discord") body = `<div class="facts">${fact("Server", esc(SITE.community || "OnionS Spoon Alliance"))}${(SITE.discord || {}).voiceChannel ? fact("Raid voice channel", esc(SITE.discord.voiceChannel)) : ""}</div>` + ctaLink("OPEN DISCORD", (SITE.links || {}).discord);
+    else if (e.key === "schedule") body = `<div class="facts">${(SITE.schedule || []).filter(s => s.status !== "cancelled").slice(0, 6).map(s => fact(DAYS[s.day] + " " + (s.start || ""), esc(s.game || "TBA"))).join("") || fact("Schedule", "Coming soon")}</div>` + `<a class="cta" href="./#schedule"><span class="comic">FULL SCHEDULE</span></a>`;
+    else if (e.key === "character") body = `<div class="facts">${fact("On stream", "!skin · !color · !hat")}${fact("Creator", "Coming soon")}</div>`;
+    else body = `<div class="facts">${fact("Status", "Coming soon")}</div>`;
+    $("detail").innerHTML = `<div class="kick">${esc(e.kicker)}</div><h1>${esc(e.name)}</h1><div class="bubble">${esc(e.desc)}</div>${body}`;
+  }
+  function needSignIn(what) { return `<p class="note">Sign in to ${what}.</p>` + cta("SIGN IN", 'data-act="signin"'); }
+  function shopHtml() {
+    if (!sb) return `<p class="note">The shop opens soon.</p>`;
+    if (!shop.length) return `<p class="note">Nothing in the shop yet. New cosmetics drop soon.</p>`;
+    return `<div class="list">${shop.map(it => {
+      const o = owned[it.id], lv = o ? o.level : 0;
+      return `<div class="item"><div><b>${esc(it.name)}</b><br><small>${esc(it.category || "cosmetic")}${o ? " · level " + lv + "/" + it.max_level : ""}</small></div>
+        ${o ? `<small>OWNED</small>` : `<button class="buy" type="button" data-buy="${esc(it.id)}" ${!user || (me.coins ?? 0) < it.price ? "disabled" : ""}>🪙 ${nf(it.price)}</button>`}
+        ${o ? `<div class="lv">${Array.from({ length: it.max_level }, (_, i) => `<i class="${i < lv ? "on" : ""}"></i>`).join("")}</div>` : ""}</div>`;
+    }).join("")}</div>${user ? "" : needSignIn("buy cosmetics")}`;
+  }
+  function lootHtml() {
+    if (!user) return needSignIn("collect your raid chests");
+    if (!loot.length) return `<p class="note">No chests yet. Help beat a raid boss and they show up here. YouTube or Twitch? Use LINK CHAT first.</p>` + cta("CHECK FOR NEW CHESTS", 'data-act="claim"');
+    return `<div class="list">${loot.map(l => `<div class="item"><div><b>${esc(l.boss || "Raid boss")}</b><br><small>${new Date(l.won_at).toLocaleDateString()} · ${esc(l.platform)} · ${l.chests} chests</small></div><b>🪙 ${nf(l.coins)}</b></div>`).join("")}</div>` + cta("CHECK FOR NEW CHESTS", 'data-act="claim"');
+  }
+  function linkHtml() {
+    if (!user) return needSignIn("get your link code");
+    const list = links.length ? `<div class="facts">${links.map(l => fact(l.platform, esc(l.login))).join("")}</div>` : "";
+    if (code) return `<div class="code" aria-label="Your code">${esc(code)}</div><p class="note">During a stream, type <b>!link ${esc(code)}</b> in YouTube or Twitch chat. This page updates by itself when it works (the code lasts 30 minutes).</p>${list}`;
+    return list + cta("GET MY CODE", 'data-act="code"');
+  }
+  $("detail").addEventListener("click", async ev => {
+    const b = ev.target.closest("[data-act],[data-buy]"); if (!b) return;
+    if (b.dataset.act === "signin") openSignIn();
+    if (b.dataset.act === "claim") claim(true);
+    if (b.dataset.act === "code") newCode();
+    if (b.dataset.buy) buy(b.dataset.buy, b);
+  });
+
+  // ---------------------------------------------------------------- account
+  function openSignIn() {
+    const list = String((SITE.online || {}).providers || "discord").split(/[\s,]+/).filter(p => PROV[p]);
+    $("provs").innerHTML = list.map(p => `<button class="prov" type="button" data-p="${p}"><span style="width:14px;height:14px;border-radius:50%;background:${PROV[p][1]};border:2px solid #0a0f1f"></span>${PROV[p][0]}</button>`).join("");
+    $("signin").hidden = false; $("provs").querySelector("button")?.focus();
+  }
+  $("provs").addEventListener("click", async ev => {
+    const b = ev.target.closest("[data-p]"); if (!b || !sb) return;
+    const { error } = await sb.auth.signInWithOAuth({ provider: b.dataset.p, options: { redirectTo: location.origin + location.pathname } });
+    if (error) toast(error.message, 4000);
+  });
+  $("signClose").onclick = () => { $("signin").hidden = true; };
+  $("signin").addEventListener("click", ev => { if (ev.target === $("signin")) $("signin").hidden = true; });
+  addEventListener("keydown", ev => { if (ev.key === "Escape") $("signin").hidden = true; });
+  $("who").onclick = async () => {
+    if (!sb) return toast("Sign-in isn't set up yet");
+    if (!user) return openSignIn();
+    if (confirmOut()) { await sb.auth.signOut(); user = null; me = { coins: null, aura: 0 }; owned = {}; loot = []; links = []; code = null; paintMe(); renderMenu(); }
+  };
+  function confirmOut() { return window.confirm("Sign out of the Spooners Hub?"); }
+  function nameOf(u) { const m = (u && u.user_metadata) || {}; return m.custom_claims?.global_name || m.full_name || m.name || m.user_name || (u && u.email ? u.email.split("@")[0] : "Spooner"); }
+  function paintMe() {
+    $("coins").textContent = me.coins == null ? "–" : nf(me.coins);
+    $("aura").textContent = user ? String(me.aura || 0) : "–";
+    $("whoTxt").textContent = user ? "SIGN OUT" : "SIGN IN";
+    $("pname").textContent = user ? nameOf(user).toUpperCase().slice(0, 18) : "GUEST";
+    const rank = Math.floor((me.aura || 0) / 10), into = (me.aura || 0) % 10;
+    $("prank").textContent = user ? "AURA RANK " + rank : "SIGN IN TO COLLECT COINS";
+    $("auraNext").textContent = user ? `${10 - into} LEVELS TO RANK ${rank + 1}` : "";
+    $("auraBar").style.width = user ? (into * 10) + "%" : "0%";
+  }
+  async function loadMe() {
+    if (!user) return;
+    const [a, o, l, k] = await Promise.all([
+      sb.from("player_aura").select("coins,aura").eq("id", user.id).maybeSingle(),
+      sb.from("owned").select("item_id,level"),
+      sb.from("raid_loot").select("boss,coins,chests,platform,won_at").order("won_at", { ascending: false }).limit(50),
+      sb.from("linked_accounts").select("platform,login")
+    ]);
+    if (a.data) me = { coins: a.data.coins, aura: a.data.aura };
+    owned = Object.fromEntries((o.data || []).map(x => [x.item_id, x]));
+    loot = l.data || []; links = k.data || [];
+    paintMe(); renderMenu();
+  }
+  async function claim(manual) {
+    if (!user) return;
+    const { data, error } = await sb.rpc("claim_loot");
+    if (error) { toast(error.message, 4000); return; }
+    const before = loot.length;
+    await loadMe();
+    if (data > 0) openChests(data, Math.max(1, loot.length - before)); else if (manual) toast("No new chests yet");
+  }
+  function openChests(total, wins) {
+    const n = Math.min(3 * wins, 6), svg = `<svg viewBox="0 0 64 56" aria-hidden="true"><rect x="5" y="24" width="54" height="28" rx="4" fill="#1f56d6" stroke="#0a0f1f" stroke-width="3"/><rect x="5" y="31" width="54" height="5" fill="#ffd34d" stroke="#0a0f1f" stroke-width="2"/><rect x="28" y="28" width="8" height="12" rx="2" fill="#ffd34d" stroke="#0a0f1f" stroke-width="2"/><circle class="shine" cx="32" cy="22" r="16" fill="#fff3b0"/><g class="lid"><path d="M5 26V18a14 10 0 0114-10h26a14 10 0 0114 10v8z" fill="#2f73ff" stroke="#0a0f1f" stroke-width="3"/><path d="M14 9v17M50 9v17" stroke="#ffd34d" stroke-width="4"/></g></svg>`;
+    $("chestRow").innerHTML = Array.from({ length: n }, (_, i) => `<div class="chest" style="animation-delay:${i * .12}s">${svg}</div>`).join("");
+    $("chestTotal").textContent = ""; $("chests").hidden = false;
+    [...$("chestRow").children].forEach((c, i) => setTimeout(() => c.classList.add("open"), 700 + i * 220));
+    setTimeout(() => { $("chestTotal").textContent = "+" + nf(total) + " COINS"; }, 900 + n * 220);
+    setTimeout(() => { $("chests").hidden = true; }, 3200 + n * 220);
+  }
+  async function buy(id, btn) {
+    const it = shop.find(x => x.id === id); if (!it || !user) return;
+    if (!window.confirm(`Buy ${it.name} for ${nf(it.price)} coins?`)) return;
+    btn.disabled = true;
+    const { error } = await sb.rpc("buy_item", { item: id });
+    if (error) { toast(error.message, 3500); btn.disabled = false; return; }
+    toast("Bought " + it.name + "!"); await loadMe();
+  }
+  async function newCode() {
+    const { data, error } = await sb.rpc("new_link_code");
+    if (error) return toast(error.message, 4000);
+    code = data; renderDetail();
+    const known = links.length, until = Date.now() + 30 * 60e3;
+    clearInterval(codeTimer);
+    codeTimer = setInterval(async () => {
+      if (Date.now() > until) { clearInterval(codeTimer); code = null; renderDetail(); return; }
+      const { data: k } = await sb.from("linked_accounts").select("platform,login");
+      if (k && k.length > known) { clearInterval(codeTimer); code = null; links = k; toast("Linked " + k[k.length - 1].login + "!"); await claim(false); renderMenu(); }
+    }, 4000);
+  }
+
+  // ---------------------------------------------------------------- start
+  function applySite() {
+    const hub = SITE.hub || {};
+    ENTRIES = Array.isArray(hub.entries) && hub.entries.length ? hub.entries : DEFAULT_ENTRIES;
+    $("word").textContent = hub.title || "SPOONERS";
+    $("foot").textContent = (SITE.community || "") + (SITE.channel ? " · " + SITE.channel : "");
+  }
+  // Cutroom › Webpage preview: changes show as you type
+  addEventListener("message", ev => { if (ev.origin !== location.origin || !ev.data || ev.data.type !== "site-data") return; SITE = ev.data.data || {}; applySite(); renderMenu(); });
+  async function start() {
+    try { SITE = await (await fetch("data/site.json", { cache: "no-cache" })).json(); } catch (e) { SITE = {}; }
+    applySite();
+    const on = SITE.online || {};
+    if (on.url && on.anonKey && window.supabase) {
+      sb = window.supabase.createClient(on.url, on.anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: "pkce" } });
+      const s = (await sb.auth.getSession()).data.session; user = s ? s.user : null;
+      sb.auth.onAuthStateChange((ev, s2) => { const was = user; user = s2 ? s2.user : null; if (user && !was) { $("signin").hidden = true; claim(false); } });
+      const { data } = await sb.from("shop_items").select("id,name,category,price,max_level").eq("active", true).order("price");
+      shop = data || [];
+      if (user) await claim(false);
+    }
+    paintMe(); renderMenu();
+  }
+  start();
+})();
+</script>
+</body>
+</html>
