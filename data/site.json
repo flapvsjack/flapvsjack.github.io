@@ -2,14 +2,14 @@
   "version": 1,
   "channel": "flapvsjack",
   "community": "Onions Spoon Alliance",
-  "tagline": "Games, raids & good vibes with the Spooners. Join me : Live on Twitch and YouTube.",
+  "tagline": "Games, raids & good vibes with the Spooners. Join me : Live on Twitch & YouTube.",
   "timezone": "America/Chicago",
   "tzLabel": "CT",
   "theme": {
     "a": "#1787b4",
     "b": "#ffffff"
   },
-  "starterContent": true,
+  "starterContent": false,
   "links": {
     "discord": "https://discord.gg/9cFHGTb",
     "twitch": "https://twitch.tv/flapvsjack",
@@ -72,7 +72,7 @@
     "label": "Follower goal",
     "current": 0,
     "target": 35,
-    "reward": "24-hour stream"
+    "reward": "3 Big Treasure Chest for everyone"
   },
   "shoutout": {
     "show": true,
@@ -237,5 +237,5 @@
     "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppY2puZmticmhia2lmdnBpY25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTcwMTksImV4cCI6MjExMDY3MzAxOX0.tkRYZ6wbOUFkCRQje-qIpUJl--xqOb2Sj3qrcJAwD8I",
     "providers": "discord"
   },
-  "updated": "2026-11-19T11:11:57"
+  "updated": "2026-11-21T16:39:01"
 }
