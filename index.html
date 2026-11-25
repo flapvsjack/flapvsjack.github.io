@@ -52,26 +52,27 @@
       </button>
       <div class="p3-body" id="hub-body">
         <div class="p3-scroll">
-          <div class="hubgrid">
-            <div class="sp-copy">
-              <p class="kicker"><span class="pill" id="spStatus">In development</span></p>
-              <h2>Spooners Hub</h2>
-              <p class="lead" id="spBlurb"></p>
-              <ul class="features" id="spFeatures"></ul>
-              <a class="hubbtn" href="hub.html"><span>Open the Spooners Hub</span><b aria-hidden="true">→</b></a>
-              <p class="hubnote">Sign in to collect your raid coins, shop cosmetics and link your YouTube or Twitch chat name.</p>
-            </div>
-            <div class="creator" aria-label="Character creator preview">
-              <span class="label">Character creator · preview</span>
+          <div class="hubtop">
+            <span class="pill" id="spStatus">In development</span>
+            <p class="hubsub" id="spBlurb"></p>
+            <a class="hubbtn" href="hub.html"><span>Open the Spooners Hub</span><b aria-hidden="true">→</b></a>
+          </div>
+          <!-- a mini Spooners Hub: same menu, Spooner and info card as hub.html -->
+          <div class="hgame">
+            <nav class="hmenu" id="hMenu" aria-label="Spooners Hub menu"></nav>
+            <div class="hstage">
+              <div class="hglow" aria-hidden="true"></div><div class="hring" aria-hidden="true"></div>
               <div class="stage" id="spStage"></div>
-              <div class="creator-ctl">
+              <div class="hplate"><div class="n" id="hPlateName">GUEST</div><div class="r">SIGN IN AT THE HUB</div></div>
+              <div class="creator-ctl hctl" aria-label="Try a look">
                 <div class="ctl"><span class="label">Colour</span><div class="swatches" id="spColors"></div></div>
                 <div class="ctl"><span class="label">Hat</span><div class="chips" id="spHats"></div></div>
                 <div class="ctl"><span class="label">Name</span><input id="spName" maxlength="16" placeholder="Your name" autocomplete="off"></div>
               </div>
-              <p class="small">A taste of what's coming. Your Spooner already lives on stream: type <code>!color</code>, <code>!hat</code> or <code>!skin</code> in chat.</p>
             </div>
+            <section class="hdetail" aria-live="polite"><div class="hcard" id="hDetail"></div></section>
           </div>
+          <ul class="features" id="spFeatures" hidden></ul>
           <div class="shop">
             <div class="shop-h"><h3>Spoon shop</h3><span class="pill pill-soft">Open now</span></div>
             <a class="shopcard" href="hub.html#shop">

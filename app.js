@@ -237,6 +237,7 @@
       $("spName").addEventListener("input", () => { me.name = $("spName").value; drawSpooner(); });
     }
     drawSpooner();
+    renderHubMenu();
     const shop = (sp.shop && sp.shop.length ? sp.shop : [
       { icon: "🛡️", name: "Knight skin", price: "500 spoons" }, { icon: "🤖", name: "Mech skin", price: "750 spoons" },
       { icon: "👑", name: "Gold crown", price: "300 spoons" }, { icon: "🎧", name: "Neon headphones", price: "200 spoons" },
@@ -244,6 +245,57 @@
       { icon: "⚔️", name: "Raid banner", price: "400 spoons" }, { icon: "🥄", name: "Golden spoon", price: "1000 spoons" }]);
     $("shopGrid").innerHTML = shop.map((it) => `<div class="item"><div class="ico" aria-hidden="true">${esc(it.icon || "🥄")}</div><b>${esc(it.name)}</b><span>${esc(it.price || "")}</span></div>`).join("");
   }
+
+  // mini hub: same menu entries as hub.html (Cutroom › Webpage › Spooners Hub menu)
+  const HUB_ICON = {
+    raids: "M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2",
+    horde: "M12 3a7 7 0 00-7 7v3l2 2v3h3v-2h4v2h3v-3l2-2v-3a7 7 0 00-7-7zM9 11h.01M15 11h.01",
+    character: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
+    shop: "M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2",
+    loot: "M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4M10 14h4",
+    link: "M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1",
+    discord: "M4 5h16v11H9l-5 4z",
+    schedule: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",
+  };
+  const HUB_DEFAULT = [
+    { key: "raids", name: "RAIDS", tag: "Live", kicker: "TEAM UP IN CHAT", desc: "Join the stream raid and fight the boss together with chat commands. Beat it and everyone gets 3 big chests of coins." },
+    { key: "horde", name: "HORDE", tag: "Live", kicker: "SURVIVE THE WAVES", desc: "Robot waves grow every round. Survive every third wave and everyone still standing gets a big chest of coins." },
+    { key: "character", name: "CHARACTER", tag: "", kicker: "BUILD YOUR SPOONER", desc: "Pick what your Spooner wears and colour it. Save, and your stream avatar wears it too." },
+    { key: "shop", name: "SHOP", tag: "Coins", kicker: "SPEND YOUR COINS", desc: "Buy colours, add-ons and companions. Each cosmetic levels up to 10, and every level raises your Aura." },
+    { key: "loot", name: "LOOT", tag: "", kicker: "RAID REWARDS", desc: "Every boss you help beat drops 3 big chests of coins. Sign in to collect them." },
+    { key: "link", name: "LINK CHAT", tag: "YT · TW", kicker: "YOUTUBE & TWITCH", desc: "Played raids from YouTube or Twitch chat? Get a code in the Hub and type it in chat. Your coins from that name become yours." },
+    { key: "discord", name: "DISCORD", tag: "", kicker: "ONIONS SPOON ALLIANCE", desc: "Hang out with the community, watch streams and catch raid alerts." },
+    { key: "schedule", name: "SCHEDULE", tag: "", kicker: "NEXT STREAM", desc: "See when the next stream and raid go live." },
+  ];
+  let hubSel = 0;
+  const hubEntries = () => { const e = S.hub && Array.isArray(S.hub.entries) && S.hub.entries.length ? S.hub.entries : HUB_DEFAULT; return e.filter((x) => x.show !== false); };
+  function renderHubMenu() {
+    const ents = hubEntries(); if (hubSel >= ents.length) hubSel = 0;
+    $("hMenu").innerHTML = ents.map((e, i) => `<button class="hmb" type="button" data-i="${i}" aria-pressed="${i === hubSel}">` +
+      `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${HUB_ICON[e.key] || HUB_ICON.raids}"/></svg>` +
+      `<span class="nm">${esc(e.name)}</span><span class="tg">${esc(e.tag || "")}</span></button>`).join("");
+    renderHubDetail();
+  }
+  function renderHubDetail() {
+    const e = hubEntries()[hubSel]; if (!e) return;
+    const fact = (k, v) => `<div class="hfact"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`;
+    const r = S.raids || {}, dc = discordUrl();
+    let facts = "", cta = `<a class="hcta" href="hub.html#${esc(e.key)}"><span>Open in the Hub</span><b aria-hidden="true">→</b></a>`;
+    if (e.key === "raids") { facts = fact("When", r.when || "Weekends on Discord") + (r.modes || []).slice(0, 4).map((m) => fact("Mode", m.name)).join("") + fact("Victory reward", "3 big chests each"); if (dc) cta = `<a class="hcta" href="${esc(dc)}" target="_blank" rel="noopener"><span>Join the raid</span><b aria-hidden="true">→</b></a>`; }
+    else if (e.key === "horde") { facts = fact("When", r.when || "Weekends on Discord") + fact("Waves", "Bigger every round") + fact("Commands", "!shoot · !slash · !grenade") + fact("Every 3rd wave", "1 big chest each"); if (dc) cta = `<a class="hcta" href="${esc(dc)}" target="_blank" rel="noopener"><span>Join the raid</span><b aria-hidden="true">→</b></a>`; }
+    else if (e.key === "discord") { facts = fact("Server", S.community || "OnionS Spoon Alliance") + ((S.discord || {}).voiceChannel ? fact("Raid voice channel", S.discord.voiceChannel) : ""); if (dc) cta = `<a class="hcta" href="${esc(dc)}" target="_blank" rel="noopener"><span>Open Discord</span><b aria-hidden="true">→</b></a>`; }
+    else if (e.key === "schedule") { facts = slotsLive().slice().sort((a, b) => a.day - b.day || toMin(a.start) - toMin(b.start)).slice(0, 5).map((s) => fact(`${DAYS[s.day]} ${fmt(s.start)}`, s.game || "TBA")).join("") || fact("Schedule", "Coming soon"); cta = `<a class="hcta" href="#schedule" data-open="schedule"><span>Full schedule</span><b aria-hidden="true">→</b></a>`; }
+    $("hDetail").innerHTML = `<div class="kick">${esc(e.kicker || "")}</div><h3>${esc(e.name)}</h3><div class="bubble">${esc(e.desc || "")}</div>` +
+      (facts ? `<div class="hfacts">${facts}</div>` : "") + cta;
+    const so = $("hDetail").querySelector("[data-open]");
+    if (so) so.addEventListener("click", (ev) => { ev.preventDefault(); openPanel("schedule"); });
+  }
+  $("hMenu").addEventListener("click", (ev) => { const b = ev.target.closest(".hmb"); if (!b) return; hubSel = +b.dataset.i; renderHubMenu(); });
+  $("hMenu").addEventListener("mouseover", (ev) => {
+    const b = ev.target.closest(".hmb"); if (!b || +b.dataset.i === hubSel || !matchMedia("(hover:hover)").matches) return;
+    hubSel = +b.dataset.i; [...$("hMenu").children].forEach((x, i) => x.setAttribute("aria-pressed", i === hubSel)); renderHubDetail();
+  });
+  $("spName").addEventListener("input", () => { $("hPlateName").textContent = ($("spName").value.trim() || "Guest").toUpperCase(); });
 
   // ---------------------------------------------------------------- discord
   function renderDiscord() {
