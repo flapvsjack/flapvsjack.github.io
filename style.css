@@ -542,3 +542,68 @@ body::before{background:var(--a-deep)}
 .p3-hub .p3-scroll{padding-left:26px;padding-right:22px}
 .hubtop{padding-right:96px}
 @media (max-width:859px){.p3-hub .p3-scroll{padding-left:max(22px,env(safe-area-inset-left,0px))}.hubtop{padding-right:0}}
+
+/* ===== Support: slanted plates like the top panels and the hub menu ===== */
+.band-a#support{background:var(--a);color:#fff;position:relative;overflow:hidden}
+.band-a#support::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 28px);pointer-events:none}
+.band-a#support .in{position:relative}
+.band-a#support h2{color:#fff}
+.supportgrid{gap:28px;padding:0 14px 10px}
+.band-a#support .scard{transform:skewX(-8deg);background:var(--ink);color:#fff;border:2px solid #fff;border-radius:0;box-shadow:10px 10px 0 var(--a-deep);padding:20px 24px 22px;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease}
+.band-a#support .scard > *{transform:skewX(8deg)}
+.band-a#support .scard:hover{transform:skewX(-8deg) translateY(-4px);box-shadow:12px 14px 0 var(--a-deep)}
+.band-a#support .scard h3{font:700 italic 26px/1 var(--display);text-transform:uppercase;color:#fff;text-shadow:3px 3px 0 var(--a)}
+.band-a#support .scard p{color:#d6eef8;font-size:15px;line-height:1.45}
+.band-a#support .scard .btn-a{margin-top:6px;align-self:flex-end;transform:skewX(-4deg);background:#fff;color:var(--a-deep);border:2px solid #fff;border-radius:0;
+  box-shadow:5px 5px 0 var(--a);font:700 italic 16px/1 var(--display);text-transform:uppercase;padding:13px 18px}
+.band-a#support .scard .btn-a:hover{transform:skewX(-4deg) translateY(-2px);box-shadow:6px 7px 0 var(--a)}
+.band-a#support .scard .btn-a::after{content:"→";font-style:normal;margin-left:4px}
+.band-a#support .scard:nth-child(1){border-top:6px solid #ff424d}
+.band-a#support .scard:nth-child(2){border-top:6px solid #9146ff}
+.band-a#support .scard:nth-child(3){border-top:6px solid #ff0000}
+.band-a#support .scard .btn-a{white-space:normal;text-align:center;max-width:100%;line-height:1.15}
+
+/* ===== every band below the panels: same slanted-plate look ===== */
+.band,.foot{position:relative;overflow:hidden}
+.band::before,.foot::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 28px)}
+.band > .in,.foot > .in{position:relative}
+.band h2{text-shadow:3px 3px 0 var(--a-deep)}
+.band-b h2{text-shadow:3px 3px 0 var(--ink)}
+/* plates */
+.band .card,.band .clip{transform:skewX(-6deg);background:var(--ink);color:#fff;border:2px solid #fff;border-radius:0;box-shadow:10px 10px 0 var(--a-deep);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease}
+.band-b .card,.band-b .clip{box-shadow:10px 10px 0 var(--ink)}
+.band .card > *,.band .clip > *{transform:skewX(6deg)}
+.band .clip:hover{transform:skewX(-6deg) translateY(-4px)}
+.commgrid,.clips{gap:26px;padding:0 12px 10px}
+.mapgrid{gap:28px}
+.band .card h3,.band .card .h3,.band .card b{color:#fff}
+.band .card h3{font:700 italic 24px/1.05 var(--display);text-transform:uppercase;text-shadow:3px 3px 0 var(--a)}
+.band .card .label,.band .card .small,.band .card .extra,.band .card .vrow span,.band .clip .small{color:#d6eef8}
+.band .card .bigname{color:var(--neon-c)}
+.band .card .bar{background:rgba(255,255,255,.12);border-color:#fff;border-radius:0;transform:skewX(-12deg)}
+.band .card .bar i{border-radius:0}
+.band .card .vrow .vb{background:rgba(255,255,255,.12);border-radius:0}
+.band .card .btn,.band .pinform .btn{border-radius:0;transform:skewX(-4deg);font:700 italic 15px/1 var(--display);text-transform:uppercase;box-shadow:5px 5px 0 var(--a)}
+.band .card .btn-a{background:#fff;color:var(--a-deep);border-color:#fff}
+.band .card .btn-ghost{border-color:#fff;color:#fff;box-shadow:none}
+.band .card .btn:hover{transform:skewX(-4deg) translateY(-2px)}
+/* the "pin yourself" form */
+.band .pinform h3{color:#fff}
+.band .pinform label{color:#d6eef8}
+.band .pinform input,.band .pinform select{border-radius:0;border-color:#fff}
+/* clips */
+.band .clip .thumb{background:var(--a-deep)}
+.band .clip .cb b{color:#fff}
+/* map and player frames */
+.mapframe{border:2px solid #fff;border-radius:0;box-shadow:10px 10px 0 var(--a-deep)}
+.player{border:2px solid #fff;border-radius:0}
+/* tabs and chips */
+.band .tabs{border-radius:0;transform:skewX(-10deg)}
+.band .tabs button{border-radius:0}
+.band .tabs button > *,.band .tabs button{font-style:italic}
+.band .lchip{border-radius:0;transform:skewX(-10deg);font-style:italic}
+.tally span{border-radius:0;transform:skewX(-10deg);background:var(--ink);color:#fff;border:1px solid rgba(255,255,255,.5)}
+.foot .lchip{border-radius:0;transform:skewX(-10deg)}
+.band .h3{font:700 italic 24px/1 var(--display);text-transform:uppercase;color:#fff;text-shadow:3px 3px 0 var(--ink)}
