@@ -493,26 +493,27 @@
 
   // ---------------------------------------------------------------- community
   function renderCommunity() {
+    const goalHtml = (g, autoCount, fallback, about) => {
+      const cur = Math.max(0, autoCount != null ? +autoCount : +g.current || 0), tgt = Math.max(1, +g.target || 1), pct = Math.min(100, Math.round((cur / tgt) * 100));
+      return `<span class="label">${esc(g.label || fallback)}</span><h3>${esc(g.reward ? "Unlocks: " + g.reward : "")}</h3>` +
+        `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tgt}" aria-valuenow="${cur}"><i style="width:${pct}%"></i></div>` +
+        `<div class="goalnums"><span>${about && autoCount != null ? "about " : ""}${cur.toLocaleString()} / ${tgt.toLocaleString()}</span><span>${tgt - cur > 0 ? (tgt - cur).toLocaleString() + " to go" : "Goal reached!"}</span></div>`;
+    };
     const g = S.goal || {};
     $("goalCard").hidden = g.show === false;
     const auto = g.auto && A && A.followers && A.followers.count != null;     // Cutroom keeps the follower count up to date
-    const cur = Math.max(0, auto ? +A.followers.count : +g.current || 0), tgt = Math.max(1, +g.target || 1), pct = Math.min(100, Math.round((cur / tgt) * 100));
-    $("goalCard").innerHTML = `<span class="label">${esc(g.label || "Community goal")}</span><h3>${esc(g.reward ? "Unlocks: " + g.reward : "")}</h3>` +
-      `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tgt}" aria-valuenow="${cur}"><i style="width:${pct}%"></i></div>` +
-      `<div class="goalnums"><span>${cur.toLocaleString()} / ${tgt.toLocaleString()}</span><span>${tgt - cur > 0 ? (tgt - cur).toLocaleString() + " to go" : "Goal reached!"}</span></div>`;
+    $("goalCard").innerHTML = goalHtml(g, auto ? A.followers.count : null, "Community goal");
+    // YouTube subscriber goal (Cutroom fills the count in by itself when "Count" is YouTube subscribers)
+    const yg = S.ytGoal || {};
+    $("ytGoalCard").hidden = yg.show === false || !(+yg.target > 0);
+    const ya = yg.auto && A && A.youtubeSubs != null ? A.youtubeSubs : null;
+    $("ytGoalCard").innerHTML = goalHtml(yg, ya, "YouTube sub goal", true) +
+      (safeUrl(S.links && S.links.youtube) ? `<a class="btn btn-a" href="${esc(safeUrl(S.links.youtube))}?sub_confirmation=1" target="_blank" rel="noopener">Subscribe on YouTube</a>` : "");
     const so = S.shoutout || {};
     $("shoutCard").hidden = so.show === false || !so.name;
     $("shoutCard").innerHTML = `<span class="label">${esc(so.title || "Spooner of the week")}</span><div class="bigname">${esc(so.name)}</div>` +
       (so.reason ? `<p style="margin:0">${esc(so.reason)}</p>` : "") +
       ((so.extra || []).length ? `<div class="extra">${so.extra.map((x) => `<span>${esc(x.label)}: <b>${esc(x.name)}</b></span>`).join("")}</div>` : "");
-    const v = S.vote || {};
-    $("voteCard").hidden = v.show === false || !(v.options || []).length;
-    const total = (v.options || []).reduce((n, o) => n + (+o.votes || 0), 0);
-    const top = Math.max(0, ...(v.options || []).map((o) => +o.votes || 0));
-    $("voteCard").innerHTML = `<span class="label">Game vote</span><h3>${esc(v.question || "What should we play next?")}</h3><div class="vote">` +
-      (v.options || []).map((o) => { const n = +o.votes || 0, p = total ? Math.round((n / total) * 100) : 0;
-        return `<div class="vrow${n && n === top ? " top" : ""}"><b>${esc(o.name)}</b><span>${n} vote${n === 1 ? "" : "s"} · ${p}%</span><div class="vb"><i style="width:${p}%"></i></div></div>`; }).join("") +
-      `</div><div class="row"><span class="small">${esc(v.how || "")}</span>${discordUrl() ? `<a class="btn btn-discord" href="${esc(discordUrl())}" target="_blank" rel="noopener">Vote in Discord</a>` : ""}</div>`;
     const clips = (S.clips || []).filter((c) => safeUrl(c.url));
     $("clipsWrap").hidden = !clips.length;
     $("clips").innerHTML = clips.map((c) => `<a class="clip" href="${esc(safeUrl(c.url))}" target="_blank" rel="noopener"><div class="thumb${c.kind === "short" ? " vertical" : ""}">${esc(c.kind === "vod" ? "VOD" : c.kind === "short" ? "Short" : "Clip")}</div>` +

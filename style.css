@@ -644,3 +644,7 @@ body::before{background:var(--a-deep)}
 /* hub panel */
 .shopcard,.hubbtn{border-radius:0!important}
 .item{border-radius:0}
+/* YouTube sub goal */
+.band .card.yt-goal{border-top:6px solid #ff0000}
+.yt-goal .bar i{background:repeating-linear-gradient(115deg,#ff2a2a 0 14px,#c40000 14px 28px)}
+.yt-goal .btn{align-self:flex-start}
