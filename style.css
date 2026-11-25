@@ -607,3 +607,40 @@ body::before{background:var(--a-deep)}
 .tally span{border-radius:0;transform:skewX(-10deg);background:var(--ink);color:#fff;border:1px solid rgba(255,255,255,.5)}
 .foot .lchip{border-radius:0;transform:skewX(-10deg)}
 .band .h3{font:700 italic 24px/1 var(--display);text-transform:uppercase;color:#fff;text-shadow:3px 3px 0 var(--ink)}
+
+/* ===== inside the three panels: same slanted, square-cornered plates ===== */
+.stage3 .btn,.topbar .btn{border-radius:0;transform:skewX(-6deg);font:700 italic 15px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.stage3 .btn:hover,.topbar .btn:hover{transform:skewX(-6deg) translateY(-2px)}
+.stage3 .btn-a,.stage3 .btn-white,.stage3 .btn-discord,.stage3 .btn-patreon{box-shadow:5px 5px 0 var(--ink)}
+.p3-cta{border-radius:0;transform:skewX(-8deg);font-family:var(--display);font-style:italic;text-transform:uppercase;box-shadow:5px 5px 0 var(--ink)}
+.p3-close{border-radius:0;transform:skewX(-8deg);font-family:var(--mono);text-transform:uppercase;font-size:11px;letter-spacing:.08em}
+.stage3 .tabs,.viewtoggle{border-radius:0;transform:skewX(-10deg)}
+.stage3 .tabs button,.viewtoggle button{border-radius:0;font-style:italic}
+.pill{border-radius:0;transform:skewX(-10deg)}
+/* schedule panel */
+.nextcard{border-radius:0;transform:skewX(-5deg);border:2px solid #fff}
+.nextcard > *{transform:skewX(5deg)}
+.countdown div{border-radius:0;transform:skewX(-8deg)}
+.countdown div > *{transform:skewX(8deg)}
+.onair{border-radius:0;transform:skewX(-10deg)}
+.win{border-radius:0;transform:skewX(-3deg)}
+.win > *{transform:skewX(3deg)}
+.win-badge{border-radius:0}
+.day,.slot,.game,.tier,.weeknote{border-radius:0}
+.day{transform:skewX(-3deg)} .day > *{transform:skewX(3deg)}
+.patreon-hero{border-radius:0;transform:skewX(-5deg);border:2px solid #fff;box-shadow:10px 10px 0 var(--a-deep)}
+.patreon-hero > *{transform:skewX(5deg)}
+/* discord panel (the white one) */
+.raid{border-radius:0;transform:skewX(-5deg);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--a)}
+.raid > *{transform:skewX(5deg)}
+.raid:hover{transform:skewX(-5deg) translateY(-3px);border-color:var(--neon-p)}
+.raid > img{transform:none;width:100%}
+.p3-discord .dc-live{border-radius:0;transform:skewX(-5deg);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink)}
+.p3-discord .dc-live > *{transform:skewX(5deg)}
+.p3-discord .raidhow{border-radius:0;transform:skewX(-4deg);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:14px 18px}
+.raidwhen{border-radius:0;transform:skewX(-10deg)}
+.avatars img{border-radius:0;transform:skewX(-6deg)}
+.p3-discord .btn-outline-w{box-shadow:5px 5px 0 var(--ink);background:#fff}
+/* hub panel */
+.shopcard,.hubbtn{border-radius:0!important}
+.item{border-radius:0}
