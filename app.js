@@ -1,4 +1,6 @@
 /* flapvsjack site: renders everything from data/site.json (edited in Cutroom > Webpage).
+   data/auto.json is kept up to date by Cutroom by itself: upcoming Discord events (they go on the schedule and in News)
+   and the follower count for the goal.
    Cutroom's preview can also send fresh data with postMessage({type:"site-data", data}) to show a draft live. */
 (function () {
   "use strict";
@@ -9,6 +11,7 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
   let S = null;            // the site data
+  let A = null;            // data/auto.json: Discord events + follower count (may be missing)
   let tick = 0;
 
   // ---------------------------------------------------------------- time (always the streamer's time zone)
@@ -24,18 +27,44 @@
   }
   const toMin = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
   function fmt(t) { if (!t) return ""; const [h, m] = t.split(":").map(Number); return (h % 12 || 12) + (m ? ":" + String(m).padStart(2, "0") : "") + (h >= 12 ? " PM" : " AM"); }
-  function slotsLive() { return (S.schedule || []).filter((s) => s.status !== "cancelled"); }
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const todayStr = (w) => `${w.y}-${pad2(w.m)}-${pad2(w.d)}`;
+  function daysUntil(date, w) { const [y, m, d] = String(date).split("-").map(Number); return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(w.y, w.m - 1, w.d)) / 86400000); }
+  // Discord events (from Cutroom) for the coming 7 days, as one-off schedule rows
+  function eventRows() {
+    if (S.discordSync === false) return [];
+    const w = wall(new Date());
+    return ((A && A.events) || []).filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date || "")).map((e) => {
+      const ahead = daysUntil(e.date, w);
+      return ahead >= 0 && ahead <= 6 ? { id: String(e.id), day: +e.day, start: e.start || "", end: e.end || "", game: e.name || "Stream", platform: e.platform || "Both",
+        format: "", status: "confirmed", notes: e.notes || "", link: safeUrl(e.link), date: e.date, discord: true } : null;
+    }).filter(Boolean);
+  }
+  // the schedule shown: your usual week, where a day with a Discord event shows the event instead
+  function schedule() {
+    const ev = eventRows(); if (!ev.length) return S.schedule || [];
+    const days = new Set(ev.map((e) => e.day));
+    return (S.schedule || []).filter((s) => !days.has(+s.day)).concat(ev);
+  }
+  function slotsLive() { return schedule().filter((s) => s.status !== "cancelled"); }
+  function liveNow() {     // ▶ Start stream in Cutroom turns this on (and ■ End stream off); ignored after 14 hours
+    const l = S && S.live; if (!l || !l.on) return null;
+    const t = l.since ? Date.parse(l.since + (/[zZ]|[+-]\d\d:?\d\d$/.test(l.since) ? "" : "Z")) - tzOffsetMs(new Date()) : 0;
+    return !l.since || isNaN(t) || Date.now() - t < 14 * 3600 * 1000 ? l : null;
+  }
   function nextStream() {
     const now = new Date(), w = wall(now), list = slotsLive();
+    const lv = liveNow();
+    if (lv) { const today = list.find((s) => s.day === w.day) || {}; return { s: Object.assign({ day: w.day, start: "", end: "", platform: today.platform || "Both" }, today, lv.game ? { game: lv.game } : {}), live: true, title: lv.title || "" }; }
     for (const s of list) {
-      if (s.day !== w.day) continue;
+      if (s.date ? s.date !== todayStr(w) : s.day !== w.day) continue;
       const a = toMin(s.start), b0 = toMin(s.end || s.start), b = b0 <= a ? b0 + 1440 : b0;
       if (w.min >= a && w.min < b) return { s, live: true };
     }
     let best = null, bestMin = 1e9;
     for (const s of list) {
-      let d = (s.day - w.day) * 1440 + toMin(s.start) - w.min;
-      if (d <= 0) d += 7 * 1440;
+      let d = s.date ? daysUntil(s.date, w) * 1440 + toMin(s.start) - w.min : (s.day - w.day) * 1440 + toMin(s.start) - w.min;
+      if (d <= 0) { if (s.date) continue; d += 7 * 1440; }    // a Discord event happens once; your usual week repeats
       if (d < bestMin) { bestMin = d; best = s; }
     }
     if (!best) return null;
@@ -260,7 +289,7 @@
     const lbl = S.tzLabel || "CT", w = wall(new Date()), dates = weekDates();
     $("weekNote").textContent = S.weekNote || ""; $("weekNote").hidden = !S.weekNote;
     $("week").innerHTML = DAYS.map((d, i) => {
-      const ss = (S.schedule || []).filter((s) => +s.day === i).sort((a, b) => toMin(a.start) - toMin(b.start));
+      const ss = schedule().filter((s) => +s.day === i).sort((a, b) => toMin(a.start) - toMin(b.start));
       const dt = dates[i].toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
       return `<div class="day${i === w.day ? " today" : ""}"><div class="day-h"><span class="day-name">${d}</span>${i === w.day ? '<span class="today-tag">TODAY</span>' : `<span class="day-date">${dt}</span>`}</div>` +
         (ss.length ? ss.map((s) => `<div class="slot ${esc(s.status)}"><span class="slot-time">${fmt(s.start)}${s.end ? " – " + fmt(s.end) : ""} ${esc(lbl)}</span>` +
@@ -284,7 +313,7 @@
   let activeWin = "";
   function renderCascade(lbl, w, dates) {
     const order = (s) => ((+s.day - w.day + 7) % 7) * 1440 + toMin(s.start);
-    const list = (S.schedule || []).filter((s) => s.day >= 0 && s.day <= 6).slice().sort((a, b) => order(a) - order(b));
+    const list = schedule().filter((s) => s.day >= 0 && s.day <= 6).slice().sort((a, b) => order(a) - order(b));
     const nx = nextStream();
     if (!list.some((s) => s.id === activeWin)) activeWin = (nx && nx.s.id) || (list[0] && list[0].id) || "";
     const box = $("cascade");
@@ -300,8 +329,9 @@
         `<span class="win-day">${DAYS[s.day]} · ${dt}</span><span class="win-title">${esc(s.game || "TBA")}</span>${badge}` +
         `<span class="win-time">${fmt(s.start)}${s.end ? " – " + fmt(s.end) : ""} ${esc(lbl)}</span></button>` +
         `<div class="win-body"><div class="win-in"><div class="win-game">${esc(s.game || "TBA")}</div>` +
-        `<div class="tags">${platTags(s.platform)}${fmtTags(s.format)}</div>` +
+        `<div class="tags">${platTags(s.platform)}${fmtTags(s.format)}${s.discord ? '<span class="tag dc">Discord event</span>' : ""}</div>` +
         (s.notes ? `<p class="win-notes">${esc(s.notes)}</p>` : "") +
+        (s.link ? `<p class="win-notes"><a href="${esc(s.link)}" target="_blank" rel="noopener">Open the event in Discord ↗</a></p>` : "") +
         `<p class="win-when">${DAYS_LONG[s.day]}, ${fmt(s.start)}${s.end ? " to " + fmt(s.end) : ""} ${esc(lbl)}</p></div></div></article>`;
     }).join("") : '<p class="offday">No streams this week yet.</p>';
     const busy = new Set(list.map((s) => +s.day));
@@ -340,7 +370,7 @@
       if (mine && mine !== tz()) local = ` · ${nx.at.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })} your time`;
     }
     card.innerHTML = `<span class="onair${nx.live ? " live" : ""}">${nx.live ? "● LIVE NOW" : "NEXT STREAM"}</span>` +
-      `<div class="next-game">${esc(s.game || "TBA")}</div><div class="next-meta">${DAYS_LONG[s.day]} · ${fmt(s.start)}${s.end ? " – " + fmt(s.end) : ""} ${esc(lbl)}${esc(local)}<br>${esc(plat)}</div>${cd}` +
+      `<div class="next-game">${esc(s.game || "TBA")}</div><div class="next-meta">${nx.title ? esc(nx.title) + "<br>" : ""}${DAYS_LONG[s.day]}${s.start ? " · " + fmt(s.start) : ""}${s.end ? " – " + fmt(s.end) : ""} ${s.start ? esc(lbl) : ""}${esc(local)}<br>${esc(plat)}</div>${cd}` +
       (nx.live ? `<div class="row"><a class="btn btn-a" href="#watch">Watch now</a></div>` : "");
     $("schedTeaser").textContent = nx.live ? `Live now: ${s.game || ""}` : `Next: ${DAYS[s.day]} ${fmt(s.start)} ${lbl} · ${s.game || "TBA"}`;
   }
@@ -362,7 +392,7 @@
     const tzid = tz() === "America/Chicago" ? "America/Chicago" : tz();
     const link = safeUrl(S.links && S.links.twitch) || safeUrl(S.links && S.links.youtube) || location.href;
     for (const s of slotsLive()) {
-      const ahead = (s.day - w.day + 7) % 7;   // this week's one, then every week
+      const ahead = s.date ? Math.max(0, daysUntil(s.date, w)) : (s.day - w.day + 7) % 7;   // this week's one, then every week (a Discord event: once)
       const d = new Date(base + ahead * 86400000);
       const ymd = `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
       const st = toMin(s.start), en0 = toMin(s.end || s.start) || st + 120, en = en0 <= st ? en0 + 1440 : en0;
@@ -371,7 +401,7 @@
       const t = (m) => `${pad(Math.floor(m % 1440 / 60))}${pad(m % 60)}00`;
       const txt = (v) => String(v || "").replace(/[\\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
       lines.push("BEGIN:VEVENT", `UID:${s.id || ymd + t(st)}-${(S.channel || "stream").replace(/\W/g, "")}@spooners`, "DTSTAMP:" + stamp,
-        `DTSTART;TZID=${tzid}:${ymd}T${t(st)}`, `DTEND;TZID=${tzid}:${ymdEnd}T${t(en)}`, "RRULE:FREQ=WEEKLY",
+        `DTSTART;TZID=${tzid}:${ymd}T${t(st)}`, `DTEND;TZID=${tzid}:${ymdEnd}T${t(en)}`, ...(s.date ? [] : ["RRULE:FREQ=WEEKLY"]),
         "SUMMARY:" + txt(`${S.channel || "Stream"}: ${s.game || "Live"}`), "DESCRIPTION:" + txt(`${s.platform || ""} ${s.notes || ""}`.trim() + "\n" + link),
         "URL:" + link, "STATUS:" + (s.status === "tentative" ? "TENTATIVE" : "CONFIRMED"),
         "BEGIN:VALARM", "TRIGGER:-PT15M", "ACTION:DISPLAY", "DESCRIPTION:" + txt(`${S.channel} goes live in 15 minutes`), "END:VALARM", "END:VEVENT");
@@ -413,7 +443,8 @@
   function renderCommunity() {
     const g = S.goal || {};
     $("goalCard").hidden = g.show === false;
-    const cur = Math.max(0, +g.current || 0), tgt = Math.max(1, +g.target || 1), pct = Math.min(100, Math.round((cur / tgt) * 100));
+    const auto = g.auto && A && A.followers && A.followers.count != null;     // Cutroom keeps the follower count up to date
+    const cur = Math.max(0, auto ? +A.followers.count : +g.current || 0), tgt = Math.max(1, +g.target || 1), pct = Math.min(100, Math.round((cur / tgt) * 100));
     $("goalCard").innerHTML = `<span class="label">${esc(g.label || "Community goal")}</span><h3>${esc(g.reward ? "Unlocks: " + g.reward : "")}</h3>` +
       `<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tgt}" aria-valuenow="${cur}"><i style="width:${pct}%"></i></div>` +
       `<div class="goalnums"><span>${cur.toLocaleString()} / ${tgt.toLocaleString()}</span><span>${tgt - cur > 0 ? (tgt - cur).toLocaleString() + " to go" : "Goal reached!"}</span></div>`;
@@ -535,11 +566,49 @@
   function renderLinks() { $("heroLinks").innerHTML = linkChips(); $("footLinks").innerHTML = linkChips(); setDiscordButtons(); }
 
   // ---------------------------------------------------------------- everything
+  function renderLive() {
+    const lv = liveNow(), bar = $("liveBanner"); if (!bar) return;
+    bar.hidden = !lv; document.body.classList.toggle("is-live", !!lv);
+    if (!lv) return;
+    const url = safeUrl(lv.url) || safeUrl((S.links || {}).twitch);
+    bar.innerHTML = `<span class="lb-dot"></span><b>LIVE NOW</b><span class="lb-t">${esc(lv.title || "")}${lv.game ? `<span class="lb-g"> · ${esc(lv.game)}</span>` : ""}</span>` +
+      `<a class="btn btn-white" href="#watch">Watch here</a>${url ? `<a class="btn btn-a lb-tw" href="${esc(url)}" target="_blank" rel="noopener">Open Twitch</a>` : ""}`;
+  }
+  // News: your posts (Cutroom › Webpage › News & updates) and new Discord events, newest first
+  function newsPosts() {
+    const lbl = S.tzLabel || "CT";
+    const own = (S.posts || []).filter((p) => p && (p.title || p.text)).map((p) => ({ kind: p.kind === "update" ? "update" : "news", title: p.title || "", text: p.text || "",
+      date: /^\d{4}-\d{2}-\d{2}$/.test(p.date || "") ? p.date : "", link: safeUrl(p.link) }));
+    const ev = S.discordSync === false ? [] : ((A && A.events) || []).filter((e) => e && e.date).map((e) => {
+      const w = wall(new Date((+e.first || 0) * 1000));
+      return { kind: "stream", title: e.name || "Stream", text: e.notes || "", link: safeUrl(e.link), date: todayStr(w),
+        when: `${DAYS_LONG[+e.day] || ""}, ${monthDay(e.date)} · ${fmt(e.start)}${e.end ? " – " + fmt(e.end) : ""} ${lbl}` };
+    });
+    return own.concat(ev).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6);
+  }
+  const monthDay = (ymd) => { const [y, m, d] = String(ymd || "").split("-").map(Number); return y ? new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : ""; };
+  function renderNews() {
+    const box = $("newsGrid"), band = $("news"); if (!box || !band) return;
+    const posts = newsPosts(); band.hidden = !posts.length;
+    const LABEL = { stream: "New stream", update: "Spooners update", news: "News" };
+    box.innerHTML = posts.map((p) => `<article class="news news-${p.kind}"><div class="news-top"><span class="pill${p.kind === "stream" ? "" : " pill-soft"}">${LABEL[p.kind]}</span>` +
+      `${p.date ? `<span class="news-date">${esc(monthDay(p.date))}</span>` : ""}</div><h3>${esc(p.title)}</h3>` +
+      (p.when ? `<p class="news-when">${esc(p.when)}</p>` : "") + (p.text ? `<p class="news-text">${esc(p.text)}</p>` : "") +
+      (p.link ? `<a class="btn btn-a" href="${esc(p.link)}" target="_blank" rel="noopener">${p.kind === "stream" ? "Open the Discord event" : "Read more"}</a>` : "") + "</article>").join("");
+  }
+  function renderGallery() {    // pictures and videos sent from Cutroom ("Send to… › Website gallery")
+    const g = (S.gallery || []).filter((x) => x && /^assets\/gallery\/[^/]+$/.test(x.src || ""));
+    const wrap = $("galleryWrap"); if (!wrap) return;
+    wrap.hidden = !g.length;
+    $("gallery").innerHTML = g.map((x) => x.kind === "video"
+      ? `<figure class="gal"><video src="${esc(x.src)}" controls preload="metadata" playsinline></video>${x.title ? `<figcaption>${esc(x.title)}</figcaption>` : ""}</figure>`
+      : `<figure class="gal"><a href="${esc(x.src)}" target="_blank" rel="noopener"><img src="${esc(x.src)}" alt="${esc(x.title || "")}" loading="lazy"></a>${x.title ? `<figcaption>${esc(x.title)}</figcaption>` : ""}</figure>`).join("");
+  }
   function renderAll() {
     applyTheme();
     document.title = `${S.channel || "flapvsjack"} · ${S.community || "OnionS Spoon Alliance"}`;
     $("brandName").textContent = S.channel || "flapvsjack"; $("footName").textContent = `${S.channel || ""} · ${S.community || ""}`;
-    renderLinks(); renderHub(); renderDiscord(); renderSchedule(); renderPlayer(); renderCommunity(); renderMap(); renderSupport();
+    renderLinks(); renderHub(); renderDiscord(); renderSchedule(); renderPlayer(); renderCommunity(); renderMap(); renderSupport(); renderLive(); renderGallery(); renderNews();
     layout(false);
   }
   function start(data) {
@@ -553,8 +622,12 @@
     if (e.data && e.data.type === "site-data" && e.data.data && /^(http:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/.test(e.origin)) start(e.data.data);
   });
   const want = location.hash.replace("#", "");
-  fetch("data/site.json", { cache: "no-store" }).then((r) => r.json()).then((d) => {
-    start(d);
+  const loadAuto = () => fetch("data/auto.json?t=" + Date.now(), { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  Promise.all([fetch("data/site.json", { cache: "no-store" }).then((r) => r.json()), loadAuto()]).then(([d, a]) => {
+    A = a; start(d);
     if (panels[want]) openPanel(want);
+    setInterval(() => { if (document.hidden) return; fetch("data/site.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.json())
+      .then((n) => { if (JSON.stringify(n.live || null) !== JSON.stringify(S.live || null)) { S.live = n.live; renderLive(); renderNext(); } }).catch(() => {});
+      loadAuto().then((a2) => { if (a2 && JSON.stringify(a2) !== JSON.stringify(A)) { A = a2; renderSchedule(); renderCommunity(); renderNews(); } }); }, 120000);
   }).catch(() => { document.body.insertAdjacentHTML("afterbegin", '<p style="padding:12px;background:#fde8e8;margin:0">The schedule couldn\'t load. Refresh the page to try again.</p>'); });
 })();

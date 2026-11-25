@@ -123,6 +123,18 @@ nav.menu { display:flex; flex-direction:column; gap:12px; }
 footer { padding:0 clamp(16px, 4vw, 56px) 28px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--pale); }
 footer a { text-decoration:none; }
 
+/* Latest update (written in Cutroom › Webpage › News & updates) */
+.latest { box-sizing:border-box; position:relative; display:block; margin-top:22px; width:min(300px, 86vw); transform:skewX(-6deg); background:var(--ink); border:3px solid var(--white); box-shadow:6px 6px 0 var(--bright); }
+.latest[hidden] { display:none; }
+.latest > div { transform:skewX(6deg); padding:12px 16px 14px; }
+.latest .k { display:flex; justify-content:space-between; gap:10px; font-size:13px; font-weight:800; letter-spacing:2px; color:var(--cyan); }
+.latest h3 { margin:4px 0 4px; font-family:Bangers, cursive; font-weight:400; font-size:26px; letter-spacing:1px; line-height:1; }
+.latest p { margin:0; font-size:17px; line-height:1.25; color:var(--pale); white-space:pre-line; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.latest.open p { -webkit-line-clamp:unset; }
+.latest a, .latest .more { color:var(--cyan); font-weight:800; }
+.latest .more { all:unset; cursor:pointer; margin-top:6px; font-size:15px; letter-spacing:1px; }
+.latest .more:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+.latest .row2 { display:flex; gap:14px; align-items:baseline; flex-wrap:wrap; margin-top:4px; }
 @media (max-width:1100px) { .layout { grid-template-columns:minmax(240px, 420px) 1fr; } .hero { grid-column:1 / -1; order:-1; } }
 @media (max-width:700px) {
   .layout { grid-template-columns:1fr; }
@@ -162,6 +174,7 @@ footer a { text-decoration:none; }
     </svg>
     <div class="plate"><div class="n" id="pname">GUEST</div><div class="r" id="prank">SIGN IN TO COLLECT COINS</div></div>
     <div class="aura"><div class="lab"><span>AURA</span><span id="auraNext"></span></div><div class="bar"><i id="auraBar"></i></div></div>
+    <article class="latest" id="latest" hidden aria-label="Latest update"></article>
   </section>
   <section class="detail" aria-live="polite"><div class="card"><div class="in" id="detail"></div></div></section>
 </main>
@@ -409,7 +422,24 @@ footer a { text-decoration:none; }
     ENTRIES = Array.isArray(hub.entries) && hub.entries.length ? hub.entries : DEFAULT_ENTRIES;
     $("word").textContent = hub.title || "SPOONERS";
     $("foot").textContent = (SITE.community || "") + (SITE.channel ? " · " + SITE.channel : "");
+    renderLatest();
   }
+  // the newest Spooners update from Cutroom › Webpage › News & updates
+  function renderLatest() {
+    const box = $("latest"); if (!box) return;
+    const ups = (SITE.posts || []).filter(p => p && p.kind === "update" && (p.title || p.text)).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    const p = ups[0]; box.hidden = !p; if (!p) return;
+    const dt = /^\d{4}-\d{2}-\d{2}$/.test(p.date || "") ? new Date(p.date + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).toUpperCase() : "";
+    const link = /^https?:\/\//i.test(String(p.link || "").trim()) ? String(p.link).trim() : "";
+    box.innerHTML = `<div><div class="k"><span>LATEST UPDATE</span><span>${esc(dt)}</span></div>${p.title ? `<h3>${esc(p.title)}</h3>` : ""}` +
+      `${p.text ? `<p>${esc(p.text)}</p>` : ""}<div class="row2">${String(p.text || "").length > 140 || /\n.*\n.*\n/.test(p.text || "") ? '<button class="more" type="button" aria-expanded="false">SHOW ALL</button>' : ""}` +
+      `${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">Read more →</a>` : ""}</div></div>`;
+    box.classList.remove("open");
+  }
+  $("latest").addEventListener("click", e => {
+    const b = e.target.closest(".more"); if (!b) return;
+    const open = $("latest").classList.toggle("open"); b.setAttribute("aria-expanded", open); b.textContent = open ? "SHOW LESS" : "SHOW ALL";
+  });
   // Cutroom › Webpage preview: changes show as you type
   addEventListener("message", ev => { if (ev.origin !== location.origin || !ev.data || ev.data.type !== "site-data") return; SITE = ev.data.data || {}; applySite(); renderMenu(); });
   // ---------------------------------------------------------------- your Spooner (Cutroom copies the Workflow export to spooners/ when you publish)

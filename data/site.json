@@ -23,7 +23,7 @@
   },
   "watch": {
     "twitchChannel": "flapvsjack",
-    "youtubeChannelId": ""
+    "youtubeChannelId": "UCyH5SKx9IZ2FAD-r72L_FGg"
   },
   "discord": {
     "guildId": "329044337981653013",
@@ -237,5 +237,5 @@
     "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppY2puZmticmhia2lmdnBpY25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTcwMTksImV4cCI6MjExMDY3MzAxOX0.tkRYZ6wbOUFkCRQje-qIpUJl--xqOb2Sj3qrcJAwD8I",
     "providers": "discord"
   },
-  "updated": "2026-11-21T16:39:01"
+  "updated": "2026-11-25T09:45:50"
 }

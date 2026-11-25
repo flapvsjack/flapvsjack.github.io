@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appeal a ban · Spooners</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root { --a:#1787b4; --a-deep:#0f6a8f; --ink:#0d2233; --muted:#3d5466; --bg:#f3f8fb; --line:#cfe1ea; --ok:#1f9d5c; --bad:#c0392b; --discord:#5865f2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--a); color:#fff; padding:28px 20px; }
+  header a { color:#fff; }
+  .in { max-width:680px; margin:0 auto; }
+  main { padding:28px 20px 60px; }
+  h1 { margin:6px 0 0; font-size:32px; }
+  .sub { opacity:.9; margin-top:4px; font-size:15px; }
+  p, li { color:var(--muted); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px; box-shadow:6px 6px 0 var(--a); }
+  .card h2 { margin:0 0 8px; font-size:21px; color:var(--ink); }
+  label { display:block; font-weight:600; color:var(--ink); margin:16px 0 6px; }
+  textarea { width:100%; min-height:150px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:16px; color:var(--ink); resize:vertical; }
+  textarea:focus, button:focus-visible { outline:3px solid #9fd8ff; outline-offset:2px; }
+  .check { display:flex; gap:10px; align-items:flex-start; font-weight:500; }
+  .check input { margin-top:6px; width:18px; height:18px; }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:18px; }
+  button, .btn { display:inline-flex; align-items:center; gap:8px; border:0; border-radius:8px; padding:12px 18px; font:700 16px/1 system-ui, sans-serif; cursor:pointer; text-decoration:none; }
+  .btn-discord { background:var(--discord); color:#fff; }
+  .btn-a { background:var(--a); color:#fff; }
+  .btn-ghost { background:transparent; color:var(--a-deep); border:2px solid var(--line); }
+  button[disabled] { opacity:.6; cursor:default; }
+  .count { font-size:13px; color:var(--muted); margin-left:auto; }
+  .msg { margin-top:14px; font-weight:600; }
+  .msg.bad { color:var(--bad); } .msg.ok { color:var(--ok); }
+  .status { border-left:5px solid var(--a); padding:12px 16px; background:#eef6fa; border-radius:8px; margin:0 0 14px; }
+  .status.ok { border-color:var(--ok); background:#eaf7f0; } .status.bad { border-color:var(--bad); background:#fbeeec; }
+  .status b { color:var(--ink); }
+  .who { font-size:14px; color:var(--muted); margin:0 0 6px; }
+  .small { font-size:14px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header><div class="in">
+  <a href="./">← <span id="brand">flapvsjack</span></a>
+  <h1>Appeal a ban</h1>
+  <div class="sub" id="server">From the Discord server</div>
+</div></header>
+<main><div class="in">
+  <p>If you were banned from the Discord and think it was a mistake (for example, your account was hacked and posted a scam), tell us here. A moderator reads every appeal.</p>
+
+  <div class="card" id="card" aria-live="polite">
+    <div id="loading"><p>Loading…</p></div>
+
+    <div id="signin" hidden>
+      <h2>Sign in with Discord</h2>
+      <p>So we know which account the appeal is for. We only see your Discord name and ID.</p>
+      <button class="btn-discord" id="btnSignin" type="button">Sign in with Discord</button>
+    </div>
+
+    <div id="signed" hidden>
+      <p class="who" id="who"></p>
+      <div id="statusBox"></div>
+      <form id="form" hidden>
+        <h2>Your appeal</h2>
+        <label for="reason">What happened, and why should we let you back?</label>
+        <textarea id="reason" maxlength="1500" required></textarea>
+        <label class="check"><input type="checkbox" id="hacked"> My account was hacked or someone else used it (and I've changed my password)</label>
+        <div class="row">
+          <button class="btn-a" id="btnSend" type="submit">Send appeal</button>
+          <span class="count" id="count">0 / 1500</span>
+        </div>
+      </form>
+      <div class="row"><button class="btn-ghost" id="btnOut" type="button">Sign out</button></div>
+    </div>
+
+    <p class="msg" id="msg" role="status"></p>
+  </div>
+
+  <p class="small">You can send one appeal at a time. If it's denied, you can appeal again after 30 days. See the <a href="privacy.html">privacy policy</a> for what we keep.</p>
+</div></main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const safeUrl = (u) => (/^https:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
+  let sb = null, SITE = {};
+  const show = (id) => ["loading", "signin", "signed"].forEach((x) => { $(x).hidden = x !== id; });
+  const msg = (t, cls) => { $("msg").textContent = t || ""; $("msg").className = "msg " + (cls || ""); };
+  const when = (t) => (t ? new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "");
+
+  async function refresh() {
+    const s = (await sb.auth.getSession()).data.session;
+    if (!s) { show("signin"); return; }
+    show("signed");
+    const m = s.user.user_metadata || {};
+    const name = (m.custom_claims && m.custom_claims.global_name) || m.full_name || m.name || "your Discord account";
+    $("who").textContent = "Signed in as " + name;
+    const { data, error } = await sb.rpc("my_appeals");
+    if (error) { $("statusBox").innerHTML = ""; $("form").hidden = true; msg("Appeals aren't set up on this site yet. Please message a moderator another way.", "bad"); return; }
+    const last = (data || [])[0];
+    const invite = safeUrl((SITE.links || {}).discord);
+    let html = "", canSend = true;
+    if (last && last.status === "open") {
+      html = `<div class="status"><b>Your appeal is waiting for a moderator.</b><br>Sent ${esc(when(last.created_at))}. Check back here; you'll see the answer on this page.</div>`; canSend = false;
+    } else if (last && last.status === "accepted") {
+      html = `<div class="status ok"><b>Your appeal was accepted.</b> You're unbanned and welcome back.` +
+        (invite ? `<div class="row"><a class="btn btn-discord" href="${esc(invite)}" target="_blank" rel="noopener">Rejoin the Discord</a></div>` : "") + "</div>"; canSend = false;
+    } else if (last && last.status === "denied") {
+      const next = new Date(new Date(last.decided_at || last.created_at).getTime() + 30 * 86400000);
+      canSend = next <= new Date();
+      html = `<div class="status bad"><b>Your last appeal was denied</b> on ${esc(when(last.decided_at))}.` + (canSend ? " You can send a new one below." : ` You can appeal again after ${esc(when(next))}.`) + "</div>";
+    }
+    $("statusBox").innerHTML = html;
+    $("form").hidden = !canSend;
+  }
+
+  $("btnSignin").onclick = async () => {
+    msg("");
+    const { error } = await sb.auth.signInWithOAuth({ provider: "discord", options: { redirectTo: location.origin + location.pathname } });
+    if (error) msg("Couldn't open the Discord sign-in: " + error.message, "bad");
+  };
+  $("btnOut").onclick = async () => { await sb.auth.signOut(); msg(""); refresh(); };
+  $("reason").addEventListener("input", () => { $("count").textContent = $("reason").value.length + " / 1500"; });
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const reason = $("reason").value.trim();
+    if (reason.length < 10) { msg("Tell us a bit more (at least 10 characters).", "bad"); return; }
+    $("btnSend").disabled = true; msg("Sending…");
+    const { error } = await sb.rpc("send_appeal", { reason, hacked: $("hacked").checked });
+    $("btnSend").disabled = false;
+    if (error) { msg(error.message || "Couldn't send it. Try again in a minute.", "bad"); return; }
+    $("reason").value = ""; $("hacked").checked = false; $("count").textContent = "0 / 1500";
+    msg("Sent. A moderator will look at it soon.", "ok");
+    refresh();
+  });
+
+  (async function start() {
+    try { SITE = await (await fetch("data/site.json", { cache: "no-cache" })).json(); } catch (e) { SITE = {}; }
+    if (SITE.channel) $("brand").textContent = SITE.channel;
+    if (SITE.community) $("server").textContent = "From the " + SITE.community + " Discord server";
+    const on = SITE.online || {};
+    if (!on.url || !on.anonKey || !window.supabase) { show("loading"); $("loading").innerHTML = "<p>Appeals aren't available right now. Please message a moderator another way.</p>"; return; }
+    sb = window.supabase.createClient(on.url, on.anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: "pkce" } });
+    sb.auth.onAuthStateChange(() => refresh());
+    refresh();
+  })();
+})();
+</script>
+</body>
+</html>

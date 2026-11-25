@@ -38,6 +38,8 @@
   </div>
 </header>
 
+<div class="livebar" id="liveBanner" hidden role="status"></div>
+
 <main id="main">
   <!-- THE THREE MAIN ATTRACTIONS: slanted panels; the one you pick opens, the lines slide -->
   <section class="stage3" id="top" aria-label="Spooners Hub, Discord and Schedule">
@@ -152,6 +154,13 @@
   </section>
 
   <!-- BELOW THE FOLD -->
+  <section class="band band-a" id="news" hidden>
+    <div class="in">
+      <div class="sec-h"><h2>News</h2><span class="small">New streams post themselves from the Discord.</span></div>
+      <div class="newsgrid" id="newsGrid"></div>
+    </div>
+  </section>
+
   <section class="band" id="watch">
     <div class="in">
       <div class="sec-h"><h2>Watch live</h2>
@@ -176,6 +185,10 @@
       <div id="clipsWrap">
         <h3 class="h3">Clips &amp; VODs</h3>
         <div class="clips" id="clips"></div>
+      </div>
+      <div id="galleryWrap" hidden>
+        <h3 class="h3">Videos &amp; pictures</h3>
+        <div class="gallery" id="gallery"></div>
       </div>
     </div>
   </section>

@@ -362,6 +362,18 @@ body::before{background:var(--a-deep)}
 .band-a .scard{background:var(--a);color:#fff;box-shadow:6px 6px 0 var(--a-deep)}
 .band-a .scard p{color:#e2f4fb}
 .band-a .scard .btn-a{background:#fff;color:var(--a-deep)}
+/* News: your posts + new Discord events */
+.newsgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.newsgrid{grid-template-columns:1fr}}
+.news{background:var(--a);color:#fff;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;box-shadow:6px 6px 0 var(--a-deep);min-width:0}
+.news h3{margin:0;font-style:italic;text-transform:uppercase;overflow-wrap:anywhere}
+.news-top{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.news-date{font:700 12px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:#d6eef8}
+.news-when{margin:0;font-weight:700;color:#fff}
+.news-text{margin:0;color:#e2f4fb;white-space:pre-line;flex:1;overflow-wrap:anywhere}
+.news .btn-a{background:#fff;color:var(--a-deep)}
+.news-update{background:var(--navy);box-shadow:6px 6px 0 var(--a)}
+#news .sec-h .small{color:var(--muted)}
 .band .tabs{border-color:#fff;background:var(--a-deep)}
 .band .tabs button{color:#fff}
 .band .tabs button[aria-selected="true"]{background:#fff;color:var(--a-deep)}
@@ -454,3 +466,19 @@ body::before{background:var(--a-deep)}
 .shopcard .sc-txt span{color:#3d5466;font-size:15px}
 .shopcard .sc-go{background:var(--a,#1787b4);color:#fff;font-weight:700;padding:10px 16px;border-radius:6px;white-space:nowrap}
 @media (max-width:640px){.shopcard{grid-template-columns:auto 1fr}.shopcard .sc-go{grid-column:1/-1;text-align:center}}
+
+/* ---------- live now banner (Cutroom ▶ Start stream turns it on) ---------- */
+.livebar{position:relative;z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:10px 16px;
+  background:linear-gradient(90deg,#d62a4b,#ff5a3c);color:#fff;font:600 15px/1.3 var(--display, system-ui);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.livebar[hidden]{display:none}
+.livebar b{letter-spacing:.12em}
+.livebar .lb-g{opacity:.85;font-weight:500}
+.livebar .btn{padding:6px 14px;font-size:14px}
+.livebar .lb-dot{width:10px;height:10px;border-radius:50%;background:#fff;animation:lbp 1.4s ease-in-out infinite}
+@keyframes lbp{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.livebar .lb-dot{animation:none}}
+/* ---------- gallery (Cutroom "Send to… › Website gallery") ---------- */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.gal{margin:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.gal img,.gal video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#0b0f14}
+.gal figcaption{padding:8px 12px;font-size:14px;font-weight:600}
