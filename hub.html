@@ -218,6 +218,7 @@ footer a { text-decoration:none; }
   ];
   const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const PROV = { discord: ["Discord", "#5865F2"], twitch: ["Twitch", "#9146FF"], google: ["Google", "#ffffff"] };
+  let ECON = null;   // Supabase part 7: tiers, ranks, check-in (Cutroom › Spooners › Economy)
   let SITE = {}, ENTRIES = DEFAULT_ENTRIES, sel = 0, sb = null, user = null, me = { coins: null, aura: 0 }, shop = [], owned = {}, loot = [], links = [], code = null, codeTimer = null;
 
   function toast(t, ms = 2600) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), ms); }
@@ -233,6 +234,7 @@ footer a { text-decoration:none; }
     renderDetail();
   }
   function tagFor(e) {
+    if (e.key === "loot" && user && ECON && !checkedIn()) return "CHECK IN";
     if (e.key === "loot" && loot.length) return loot.length + " won";
     if (e.key === "link" && links.length) return links.length + " linked";
     return e.tag || "";
@@ -266,13 +268,31 @@ footer a { text-decoration:none; }
     const p = SPD && SPD.parts && SPD.parts[id];
     return p ? `<img class="th" src="spooners/${esc(p.src)}" alt="" loading="lazy">` : `<span class="th blank" aria-hidden="true">✨</span>`;
   }
+  const TIER_ORDER = ["common", "uncommon", "rare", "legendary"];
+  function tierOf(it) { return ECON && ECON.tiers && ECON.tiers[it.tier] ? ECON.tiers[it.tier] : null; }
+  function lockOf(it) {
+    const t = tierOf(it); if (!t || !user) return "";
+    const need = t.aura_rank_required || 0;
+    if ((me.rank || 0) < need) return "NEEDS " + String((ECON.aura_ranks[need] || {}).name || "RANK " + need).toUpperCase() + " AURA";
+    if (it.min_level && (me.level || 1) < it.min_level) return "NEEDS LV " + it.min_level;
+    return "";
+  }
+  function nextUnlock(it, lv) {
+    const u = it.unlocks || {}, k = Object.keys(u).map(Number).filter(n => n > lv).sort((a, b) => a - b)[0];
+    return k ? `next: ${esc(u[k])} at lv ${k}` : "";
+  }
   function shopHtml() {
     if (!sb) return `<p class="note">The shop opens soon.</p>`;
     if (!shop.length) return `<p class="note">Nothing in the shop yet. New cosmetics drop soon.</p>`;
-    return `<div class="list">${shop.map(it => {
-      const o = owned[it.id], lv = o ? o.level : 0;
-      return `<div class="item">${thumb(it.id)}<div><b>${esc(it.name)}</b><br><small>${esc(it.category || "cosmetic")}${o ? " · level " + lv + "/" + it.max_level : ""}</small></div>
-        ${o ? `<small>OWNED</small>` : `<button class="buy" type="button" data-buy="${esc(it.id)}" ${!user || (me.coins ?? 0) < it.price ? "disabled" : ""}>🪙 ${nf(it.price)}</button>`}
+    const list = ECON ? shop.slice().sort((a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) || a.price - b.price) : shop;
+    return `<div class="list">${list.map(it => {
+      const o = owned[it.id], lv = o ? o.level : 0, t = tierOf(it), lock = o ? "" : lockOf(it);
+      const chip = t ? `<span style="display:inline-block;background:${esc(t.color || "#9fb3c8")};color:#0a0f1f;border:2px solid #0a0f1f;border-radius:6px;padding:0 6px;font-size:11px;font-weight:900;letter-spacing:1px;margin-right:6px">${esc(String(t.label).toUpperCase())}</span>` : "";
+      const sub = o ? "level " + lv + "/" + it.max_level + (nextUnlock(it, lv) ? " · " + nextUnlock(it, lv) : "") : esc(it.description || it.category || "cosmetic");
+      const btn = o ? `<small>OWNED</small>` : lock ? `<button class="buy" type="button" disabled title="${esc(lock)}">🔒 ${nf(it.price)}</button>`
+        : `<button class="buy" type="button" data-buy="${esc(it.id)}" ${!user || (me.coins ?? 0) < it.price ? "disabled" : ""}>🪙 ${nf(it.price)}</button>`;
+      return `<div class="item">${thumb(it.id)}<div>${chip}<b>${esc(it.name)}</b><br><small>${sub}${lock ? ` · <b style="color:#ff8b9b">${esc(lock)}</b>` : ""}</small></div>
+        ${btn}
         ${o ? `<div class="lv">${Array.from({ length: it.max_level }, (_, i) => `<i class="${i < lv ? "on" : ""}"></i>`).join("")}</div>` : ""}</div>`;
     }).join("")}</div>${user ? "" : needSignIn("buy cosmetics")}`;
   }
@@ -308,8 +328,24 @@ footer a { text-decoration:none; }
     if (error) { toast(error.message, 4000); btn.disabled = false; return; }
     lookDirty = false; renderDetail(); toast("Saved! Your stream avatar updates within 2 minutes.", 3600);
   }
+  function todayHere() { try { return new Date().toLocaleDateString("en-CA", { timeZone: (ECON && ECON.timezone) || "America/Chicago" }); } catch (e) { return new Date().toISOString().slice(0, 10); } }
+  function checkedIn() { return !!me.last_checkin && String(me.last_checkin).slice(0, 10) === todayHere(); }
+  function checkinHtml() {
+    if (!ECON || !user) return "";
+    const c = ECON.checkin || {}, done = checkedIn(), streak = me.streak || 0;
+    let yday = ""; try { yday = new Date(Date.now() - 864e5).toLocaleDateString("en-CA", { timeZone: ECON.timezone || "America/Chicago" }); } catch (e) { /* */ }
+    const nextDay = done || String(me.last_checkin || "").slice(0, 10) === yday ? streak + 1 : 1, cyc = ((nextDay - 1) % (c.streak_max_days || 7)) + 1;
+    const amount = (c.base || 0) + (c.streak_step || 0) * (cyc - 1) + (cyc === (c.streak_max_days || 7) ? (c.day7_bonus || 0) : 0);
+    const ways = Object.values(ECON.earn || {}).filter(w => w.category !== "gift").slice(0, 6).map(w => fact(w.label, w.coins ? "🪙 " + nf(w.coins) : w.max ? "up to 🪙 " + nf((w.max || 0) * (w.chests || 1)) : "XP")).join("");
+    return `<div class="kick" style="margin-top:6px">DAILY CHECK-IN · STREAK ${streak}</div>` +
+      (done ? `<p class="note">Checked in today. Come back tomorrow for 🪙 ${nf(amount)}.</p>` : cta("CHECK IN · +" + nf(amount) + " COINS", 'data-act="checkin"')) +
+      `<div class="kick" style="margin-top:16px">MORE WAYS TO EARN</div><div class="facts">${ways}</div>`;
+  }
   function lootHtml() {
     if (!user) return needSignIn("collect your raid chests");
+    return checkinHtml() + lootList();
+  }
+  function lootList() {
     if (!loot.length) return `<p class="note">No chests yet. Help beat a raid boss and they show up here. YouTube or Twitch? Use LINK CHAT first.</p>` + cta("CHECK FOR NEW CHESTS", 'data-act="claim"');
     return `<div class="list">${loot.map(l => `<div class="item"><div><b>${esc(l.boss || "Raid boss")}</b><br><small>${new Date(l.won_at).toLocaleDateString()} · ${esc(l.platform)} · ${l.chests} chests</small></div><b>🪙 ${nf(l.coins)}</b></div>`).join("")}</div>` + cta("CHECK FOR NEW CHESTS", 'data-act="claim"');
   }
@@ -323,6 +359,7 @@ footer a { text-decoration:none; }
     const b = ev.target.closest("[data-act],[data-buy],[data-wear],[data-color],[data-paint]"); if (!b) return;
     if (b.dataset.act === "signin") openSignIn();
     if (b.dataset.act === "claim") claim(true);
+    if (b.dataset.act === "checkin") checkin(b);
     if (b.dataset.act === "code") newCode();
     if (b.dataset.buy) buy(b.dataset.buy, b);
     if (b.dataset.act === "save") saveLook(b);
@@ -357,6 +394,13 @@ footer a { text-decoration:none; }
     $("aura").textContent = user ? String(me.aura || 0) : "–";
     $("whoTxt").textContent = user ? "SIGN OUT" : "SIGN IN";
     $("pname").textContent = user ? nameOf(user).toUpperCase().slice(0, 18) : "GUEST";
+    if (ECON && me.rank_name != null) {
+      const ranks = ECON.aura_ranks || [], r = me.rank || 0, cur = (ranks[r] || {}).points || 0, nxt = ranks[r + 1];
+      $("prank").textContent = user ? `LV ${me.level || 1} · ${String(me.rank_name).toUpperCase()} AURA` : "SIGN IN TO COLLECT COINS";
+      $("auraNext").textContent = user ? (nxt ? `${nxt.points - (me.aura || 0)} TO ${String(nxt.name).toUpperCase()}` : "MAX RANK") : "";
+      $("auraBar").style.width = user ? (nxt ? Math.max(0, Math.min(100, Math.round(100 * ((me.aura || 0) - cur) / (nxt.points - cur)))) : 100) + "%" : "0%";
+      return;
+    }
     const rank = Math.floor((me.aura || 0) / 10), into = (me.aura || 0) % 10;
     $("prank").textContent = user ? "AURA RANK " + rank : "SIGN IN TO COLLECT COINS";
     $("auraNext").textContent = user ? `${10 - into} LEVELS TO RANK ${rank + 1}` : "";
@@ -365,12 +409,12 @@ footer a { text-decoration:none; }
   async function loadMe() {
     if (!user) return;
     const [a, o, l, k] = await Promise.all([
-      sb.from("player_aura").select("coins,aura").eq("id", user.id).maybeSingle(),
+      sb.from("player_aura").select(ECON ? "coins,aura,level,rank,rank_name,streak,last_checkin" : "coins,aura").eq("id", user.id).maybeSingle(),
       sb.from("owned").select("item_id,level,worn,color").then(r => r.error ? sb.from("owned").select("item_id,level") : r),
       sb.from("raid_loot").select("boss,coins,chests,platform,won_at").order("won_at", { ascending: false }).limit(50),
       sb.from("linked_accounts").select("platform,login")
     ]);
-    if (a.data) me = { coins: a.data.coins, aura: a.data.aura };
+    if (a.data) me = Object.assign({}, a.data);
     if (!lookDirty) {
       owned = Object.fromEntries((o.data || []).map(x => [x.item_id, x]));
       const pl = await sb.from("players").select("look").eq("id", user.id).maybeSingle();
@@ -394,6 +438,12 @@ footer a { text-decoration:none; }
     [...$("chestRow").children].forEach((c, i) => setTimeout(() => c.classList.add("open"), 700 + i * 220));
     setTimeout(() => { $("chestTotal").textContent = "+" + nf(total) + " COINS"; }, 900 + n * 220);
     setTimeout(() => { $("chests").hidden = true; }, 3200 + n * 220);
+  }
+  async function checkin(btn) {
+    if (!user) return; btn.disabled = true;
+    const { data, error } = await sb.rpc("checkin");
+    if (error) { toast(error.message, 3500); btn.disabled = false; return; }
+    toast(`+${nf(data.coins)} coins · ${data.streak}-day streak`, 3200); await loadMe();
   }
   async function buy(id, btn) {
     const it = shop.find(x => x.id === id); if (!it || !user) return;
@@ -495,8 +545,11 @@ footer a { text-decoration:none; }
       sb = window.supabase.createClient(on.url, on.anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: "pkce" } });
       const s = (await sb.auth.getSession()).data.session; user = s ? s.user : null;
       sb.auth.onAuthStateChange((ev, s2) => { const was = user; user = s2 ? s2.user : null; if (user && !was) { $("signin").hidden = true; claim(false); } });
-      const { data } = await sb.from("shop_items").select("id,name,category,price,max_level").eq("active", true).order("price");
-      shop = data || [];
+      const ec = await sb.from("economy_config").select("config").eq("id", 1).maybeSingle();
+      ECON = ec && !ec.error && ec.data ? ec.data.config : null;
+      let res = await sb.from("shop_items").select(ECON ? "id,name,category,price,max_level,tier,min_level,unlocks,description" : "id,name,category,price,max_level").eq("active", true).order("price");
+      if (res.error && ECON) { ECON = null; res = await sb.from("shop_items").select("id,name,category,price,max_level").eq("active", true).order("price"); }
+      shop = res.data || [];
       if (user) await claim(false);
     }
     paintMe(); renderMenu();

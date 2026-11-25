@@ -1,5 +1,10 @@
 {
   "v": 1,
   "events": [],
-  "updated": "2026-11-25T12:03:01"
+  "followers": {
+    "count": 150,
+    "twitch": 150,
+    "youtube": null
+  },
+  "updated": "2026-11-25T14:09:23"
 }

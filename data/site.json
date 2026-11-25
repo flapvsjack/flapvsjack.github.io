@@ -28,7 +28,7 @@
   "discord": {
     "guildId": "329044337981653013",
     "raidChannel": "spooners🥄comingsoon",
-    "voiceChannel": "TBD"
+    "voiceChannel": "Coming soon"
   },
   "weekNote": "",
   "schedule": [
@@ -70,9 +70,10 @@
   "goal": {
     "show": true,
     "label": "Follower goal",
-    "current": 0,
+    "current": 150,
     "target": 35,
-    "reward": "3 Big Treasure Chest for everyone"
+    "reward": "3 Big Treasure Chest for everyone",
+    "auto": "twitch"
   },
   "shoutout": {
     "show": true,
@@ -237,5 +238,5 @@
     "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppY2puZmticmhia2lmdnBpY25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTcwMTksImV4cCI6MjExMDY3MzAxOX0.tkRYZ6wbOUFkCRQje-qIpUJl--xqOb2Sj3qrcJAwD8I",
     "providers": "discord"
   },
-  "updated": "2026-11-25T09:45:50"
+  "updated": "2026-11-25T14:09:27"
 }
